@@ -22,14 +22,14 @@ void wlog_startup()
 
     if (lfs == NULL)
     {
-        logging_status = -1;
+        file_logging_status = -1;
         wlog(ERROR, "Error encountered during logging startup: %s\n", strerror(errno));
         wlog(INFO, "Logging to file is now disabled.\n");
         return;
     }
 
     wlog(INFO, "Log file stream opened.");
-    logging_status = 1;
+    file_logging_status = 1;
 };
 
 void wlog_shutdown()
@@ -77,13 +77,13 @@ void wlog(LogLevel lvl, char message[], ...)
         fprintf(stderr, "[%s] ", ll);
     fprintf(stderr, log_message);
 
-    if (logging_status == -1)
+    if (file_logging_status == -1)
         return;
 
     if (!lfs)
     {
         fprintf(stderr, "Log file stream broken. Logging to file is now disabled.");
-        logging_status = -1;
+        file_logging_status = -1;
         return;
     }
 
