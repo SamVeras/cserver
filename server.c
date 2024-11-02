@@ -16,7 +16,6 @@ void handle_user_request(int client_socket, char* req)
 {
     // TODO maybe sanitize path as only what's between / and end of string?
 
-    int  len = strlen(req);
     char method[8], path[256];  // e.g. GET /index.html -> method = "GET", path = "/index.html"
     sscanf(req, "%s %s", method, path);
 
