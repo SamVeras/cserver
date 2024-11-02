@@ -6,12 +6,6 @@
 #include <string.h>
 #include <sys/socket.h>
 
-void signal_handler(int signal)
-{
-    wlog(INFO, "Shutdown requested after receiving signal %d.", signal);
-    shut_req = 1;
-}
-
 void handle_user_request(int client_socket, char* req)
 {
     // TODO maybe sanitize path as only what's between / and end of string?

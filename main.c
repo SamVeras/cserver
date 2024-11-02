@@ -1,15 +1,16 @@
-#include "config.h"
-#include "net_utils.h"
-#include "logging.h"
-#include "server.h"
-#include "server.h"
-
-#include <string.h>
-#include <stdlib.h>
-#include <netdb.h>
 #include <errno.h>
-#include <unistd.h>
 #include <fcntl.h>
+#include <netdb.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+
+#include "config.h"
+#include "logging.h"
+#include "net_utils.h"
+#include "server.h"
+#include "server.h"
+#include "sig.h"
 
 // ---------------------------------------------------------------------------------------------- //
 
@@ -22,22 +23,17 @@ int main()
     wlog_startup();  // Start logging
     wlog(INFO, "Server starting up...");
 
-    wlog(INFO, "Setting up signal handling...");
-    struct sigaction sa;
-    sa.sa_handler = signal_handler;
-    sigemptyset(&sa.sa_mask);
-    sa.sa_flags = 0;
+    int err  = 0;              // Return value auxiliary variable
+    int ssfd = 0;              // Server socket / file descriptor
+    int csfd = 0;              // Client socket / file descriptor
 
-    if (sigaction(SIGINT, &sa, NULL) == -1)   // Interactive attention signal
-        wlog(ERROR, "Sigaction1 failed whatever");
-    if (sigaction(SIGTERM, &sa, NULL) == -1)  // Terminal request signal
-        wlog(ERROR, "Sigaction 2 failed, %s", strerror(errno));
+    if (sigh_startup() == -1)  // Start signal handling
+    {
+        wlog(FATAL, "Signal handling setup incomplete.");
+        goto shutdown;
+    };
 
     // ------------------------------------------------------------------------------------------ //
-
-    int ssfd = 0;                      // Server socket / file descriptor
-    int csfd = 0;                      // Client socket / file descriptor
-    int err;                           // Return value auxiliary variable
 
     struct addrinfo  hints;            // Struct with data to guide getaddrinfo()
     struct addrinfo* sai;              // Server address info, gives a linked list with >= 1 results
