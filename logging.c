@@ -7,7 +7,7 @@
 #include <stdarg.h>
 #include <errno.h>
 
-static const char* log_levels[6]  = {"TRACE", "DEBUG", "INFO", "WARNING", "ERROR", "FATAL"};
+static const char* log_levels[6]  = {"TRACE", "DEBUG", "INFO", "WARN", "ERROR", "FATAL"};
 static int         logging_status = 0;
 static FILE*       lfs;  // Local file stream
 
@@ -17,9 +17,9 @@ void wlog_startup()
 
     if (lfs == NULL)
     {
-        fprintf(stderr, "Error encountered during logging startup: %s\n", strerror(errno));
-        fprintf(stderr, "Logging to file is now disabled.\n");
         logging_status = -1;
+        wlog(ERROR, "Error encountered during logging startup: %s\n", strerror(errno));
+        wlog(INFO, "Logging to file is now disabled.\n");
         return;
     }
 
@@ -57,14 +57,12 @@ void wlog(LogLevel lvl, char message[], ...)
     format_log_message(log_message, strlen(log_message));
     va_end(args);
 
-    // Update time
-
-    // Format log time
+    // Get current time (formatted)
     char log_time[20];
     get_current_time(log_time, sizeof log_time);
 
     // Log level part of log message, e.g. "[  FATAL  ]"
-    char ll[9];
+    char ll[7];
     center_text(log_levels[lvl], ll, sizeof ll - 1);
 
     /* ------------------------------------------------------------------------------------------ */
