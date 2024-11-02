@@ -1,3 +1,3 @@
 #!/usr/bin/env bash
 
-gcc *.c -I. -O3 -o server
+gcc *.c -I. -o server -O3 -fsanitize=address,undefined -Wall -Werror -Wextra 
