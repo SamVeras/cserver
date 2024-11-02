@@ -48,7 +48,7 @@ void wlog(LogLevel lvl, char message[], ...)
 
     // Create mutable copy of message
     char log_message[256];
-    strncpy(log_message, message, sizeof log_message);
+    strncpy(log_message, message, sizeof log_message - 1);
 
     // Create and initialize variable argument list object, then format message copy
     va_list args;
