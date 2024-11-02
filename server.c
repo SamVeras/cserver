@@ -39,6 +39,7 @@ void handle_user_request(int client_socket, char* req)
     return;
 }
 
+// TODO send only files from data folder
 void send_file(int client_socket, const char path[])
 {
     const char* body;
@@ -76,6 +77,7 @@ void send_file(int client_socket, const char path[])
     char   buffer[1024];
     size_t bytes_read;
 
+    // TODO change the way I log this part. we're just spamming the log when the file sent is large
     wlog(INFO, "Reading file...");
     while ((bytes_read = fread(buffer, 1, sizeof(buffer), file)) > 0)
     {

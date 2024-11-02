@@ -7,9 +7,14 @@
 #include <stdarg.h>
 #include <errno.h>
 
-static const char* log_levels[6]  = {"TRACE", "DEBUG", "INFO", "WARN", "ERROR", "FATAL"};
-static int         logging_status = 0;
-static FILE*       lfs;  // Local file stream
+// Log level strings
+static const char* log_levels[6] = {"TRACE", "DEBUG", "INFO", "WARN", "ERROR", "FATAL"};
+
+// Local log file stream
+static FILE* lfs;
+
+// 0 for uninitialized, 1 for successful setup, -1 for failure
+static int file_logging_status = 0;
 
 void wlog_startup()
 {

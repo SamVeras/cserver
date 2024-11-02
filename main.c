@@ -15,9 +15,11 @@
 
 // TODO use arg for port and buffer size?
 // int main(int argc, char const* argv[])
+
+// TODO extract functions from this mess, move most of it to server.h/.c
 int main()
 {
-    wlog_startup();
+    wlog_startup();  // Start logging
     wlog(INFO, "Server starting up...");
 
     wlog(INFO, "Setting up signal handling...");
