@@ -52,7 +52,7 @@ void build_html_header(char*       header,
              content_length);
 }
 
-void center_text(const char* text, char* buff, int len)
+void center_text(const char* text, char* buff, size_t len)
 {
     if (strlen(text) >= len)
         return;

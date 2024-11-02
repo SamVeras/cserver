@@ -14,7 +14,7 @@ void build_html_header(char*       header,
                        size_t      content_length);
 
 // Center text in buffer relative to length provided.
-void center_text(const char* text, char* buff, int len);
+void center_text(const char* text, char* buff, size_t len);
 
 // Formats the current time in the format 'DD/MM/YYYY HH:MM:SS' to the buffer.
 // Requires buff_size >= 20.
