@@ -33,8 +33,8 @@ int main()
 
     // ------------------------------------------------------------------------------------------ //
 
-    int ssfd;                          // Server socket / file descriptor
-    int csfd;                          // Client socket / file descriptor
+    int ssfd = 0;                      // Server socket / file descriptor
+    int csfd = 0;                      // Client socket / file descriptor
     int err;                           // Return value auxiliary variable
 
     struct addrinfo  hints;            // Struct with data to guide getaddrinfo()
