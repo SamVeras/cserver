@@ -13,7 +13,9 @@
 
 // ---------------------------------------------------------------------------------------------- //
 
-int main(int argc, char const* argv[])
+// TODO use arg for port and buffer size?
+// int main(int argc, char const* argv[])
+int main()
 {
     wlog_startup();
     wlog(INFO, "Server starting up...");
