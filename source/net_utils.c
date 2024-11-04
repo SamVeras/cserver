@@ -6,6 +6,7 @@
 static time_t     clt;  // Current local time
 static struct tm* ct;   // Current time structure (broken-down)
 
+// TODO add data samples to data folder
 const char* get_mime_type(const char path[])
 {
     wlog(TRACE, "Getting mime-type of path %s...", path);
@@ -29,6 +30,28 @@ const char* get_mime_type(const char path[])
         return "image/gif";
     if (strcmp(ext, ".txt") == 0)
         return "text/plain";
+    if (strcmp(ext, ".json") == 0)
+        return "application/json";
+    if (strcmp(ext, ".xml") == 0)
+        return "application/xml";
+    if (strcmp(ext, ".svg") == 0)
+        return "image/svg+xml";
+    if (strcmp(ext, ".pdf") == 0)
+        return "application/pdf";
+    if (strcmp(ext, ".mp3") == 0)
+        return "audio/mpeg";
+    if (strcmp(ext, ".mp4") == 0)
+        return "video/mp4";
+    if (strcmp(ext, ".woff") == 0 || strcmp(ext, ".woff2") == 0)
+        return "font/woff";
+    if (strcmp(ext, ".ttf") == 0)
+        return "font/ttf";
+    if (strcmp(ext, ".ico") == 0)
+        return "image/x-icon";
+    if (strcmp(ext, ".zip") == 0)
+        return "application/zip";
+    if (strcmp(ext, ".csv") == 0)
+        return "text/csv";
 
     return "application/octet-stream";  // Default for unknown types
 }
