@@ -68,31 +68,36 @@ int config_server(int argc, char const* argv[])
             {
                 return EXIT_FAILURE;
             }
-        } else if (strcmp("-b", argv[i]) == 0)
+        }
+        else if (strcmp("-b", argv[i]) == 0)
         {
             i++;
             if (parse_arg(argv[i - 1], argv[i], &BUFFER_SIZE))
             {
                 return EXIT_FAILURE;
             }
-        } else if (strcmp("-l", argv[i]) == 0)
+        }
+        else if (strcmp("-l", argv[i]) == 0)
         {
             i++;
             if (parse_arg(argv[i - 1], argv[i], &log_level_int))
             {
                 return EXIT_FAILURE;
             }
-        } else if (strcmp("-c", argv[i]) == 0)
+        }
+        else if (strcmp("-c", argv[i]) == 0)
         {
             i++;
             if (parse_arg(argv[i - 1], argv[i], &BACKLOG))
             {
                 return EXIT_FAILURE;
             }
-        } else if (strcmp("-f", argv[i]) == 0)
+        }
+        else if (strcmp("-f", argv[i]) == 0)
         {
             LOG_FILE_NAME = strdup(argv[++i]);
-        } else
+        }
+        else
         {
             fprintf(stderr, "Unknown option: %s.\n", argv[i]);
             return EXIT_FAILURE;

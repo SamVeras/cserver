@@ -80,7 +80,8 @@ int server_start()
     if (err == -1)
     {
         wlog(ERROR, "Failed to set socket option. %d %s.", errno, strerror(errno));
-    } else
+    }
+    else
     {
         wlog(INFO, "Socket option successfully set.");
     }

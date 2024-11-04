@@ -33,7 +33,7 @@ BraceWrapping:
   AfterNamespace: false
   AfterStruct: true
   BeforeCatch: true
-  BeforeElse: false
+  BeforeElse: true
   IndentBraces: false
 ColumnLimit: 100
 ContinuationIndentWidth: 4
