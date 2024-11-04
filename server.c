@@ -290,17 +290,20 @@ int send_file(int client_socket, const char path[])
     ssize_t sent = send(client_socket, header, strlen(header), 0);
     wlog(INFO, "%d bytes sent.", sent);
 
-    char   buffer[1024];
+    char   buffer[BUFFER_SIZE];
     size_t bytes_read;
 
-    // TODO change the way I log this part. we're just spamming the log when the file sent is large
-    wlog(INFO, "Reading file...");
+    wlog(INFO, "Reading file with buffer of length %d...", BUFFER_SIZE);
+    unsigned long transfers = 0;
+    sent                    = 0;
     while ((bytes_read = fread(buffer, 1, sizeof(buffer), file)) > 0)
     {
-        wlog(INFO, "%lu bytes read.", bytes_read);
-        sent = send(client_socket, buffer, bytes_read, 0);
-        wlog(INFO, "%d bytes sent.", sent);
+        // wlog(INFO, "%lu bytes read.", bytes_read);
+        sent += send(client_socket, buffer, bytes_read, 0);
+        transfers++;
+        // wlog(INFO, "%d bytes sent.", sent);
     }
+    wlog(INFO, "%lu transfers done. %ld bytes sent.", transfers, sent);
     wlog(INFO, "Done reading file.");
 
     wlog(INFO, "Closing file.");

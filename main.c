@@ -14,11 +14,10 @@ int main(int argc, char const* argv[])
     if (config_server(argc, argv))
         return EXIT_FAILURE;
 
-    server_config_show();
-
     if (server_start() == EXIT_FAILURE)
         return server_shutdown();
 
+    wlog(DEBUG, "This is a debug message. It's just a test.");
     server_run();
 
     return server_shutdown();

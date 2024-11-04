@@ -49,7 +49,8 @@ int config_server(int argc, char const* argv[])
 
     if (argc == 1)
     {
-        fprintf(stderr, "Using default arguments.\n");
+        fprintf(stderr, "Using default arguments: ");
+        server_config_show();
         return EXIT_SUCCESS;
     }
 
@@ -147,7 +148,8 @@ int config_server(int argc, char const* argv[])
 
     LOG_LEVEL = (LogLevel) log_level_int;
 
-    fprintf(stderr, "Arguments successfully set.\n");
+    fprintf(stderr, "Arguments successfully set: ");
+    server_config_show();
 
     return EXIT_SUCCESS;
 }
@@ -155,8 +157,7 @@ int config_server(int argc, char const* argv[])
 void server_config_show()
 {
     fprintf(stderr,
-            "port = %d, buffer_size = %d, log_level = %d, "
-            "backlog = %d, log_file = %s\n",
+            "%d, %d, %d, %d, %s\n",
             SERVER_PORT,
             BUFFER_SIZE,
             LOG_LEVEL,
@@ -169,23 +170,29 @@ void config_help()
 {
     fprintf(stderr,
             "Usage: server [OPTIONS]...\n"
-            "-p, --port PORT\t\t\tChoose specific port to bind to. "
+            "-p, --port PORT\t\t\t"
+            "Choose specific port to bind to. "
             "Must be in range [1024, 65535] or 0, for a random port. "
             "Defaults to 0.\n"
 
-            "-b, --buffer BUFF_SIZE\t\tBuffer size for file transfer, in bytes. "
+            "-b, --buffer BUFF_SIZE\t\t"
+            "Buffer size for file transfer, in bytes. "
             "Must be a positive value. "
             "Defaults to 1024.\n"
 
-            "-l, --log-level LOGLEVEL\tLog level in range [0, 5]. "
+            "-l, --log-level LOGLEVEL\t"
+            "Only messages with this level, or higher, will be shown. "
+            "Must be in range [0, 5]. "
             "TRACE, DEBUG, INFO, WARN, ERROR, FATAL. "
             "Defaults to INFO (2).\n"
 
-            "-c, --backlog MAXCONNECT\tMaximum number of connections in queue. "
+            "-c, --backlog MAXCONNECT\t"
+            "Maximum number of connections in queue. "
             "Must be a positive value. "
             "Defaults to 5.\n"
 
-            "-f, --log-file LOGFILE\t\tName of file to write log to. "
+            "-f, --log-file LOGFILE\t\t"
+            "Name of file to write log to. "
             "Will be created if it does not exist. "
             "If specified, file name must not be empty. "
             "Defaults to server.log.\n");

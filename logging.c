@@ -73,6 +73,11 @@ int wlog(LogLevel lvl, char message[], ...)
         return EXIT_FAILURE;
     }
 
+    // if (lvl >= LOG_LEVEL)
+    //     continue;
+    if (lvl < LOG_LEVEL)
+        return EXIT_SUCCESS;
+
     char log_message[256];  // Create mutable copy of message
     strncpy(log_message, message, sizeof log_message - 1);
 
@@ -92,8 +97,7 @@ int wlog(LogLevel lvl, char message[], ...)
     /* ------------------------------------------------------------------------------------------ */
 
     fprintf(stderr, "%s ", log_time);
-    if (lvl >= (LogLevel) LOG_LEVEL)
-        fprintf(stderr, "[%s] ", ll);
+    fprintf(stderr, "[%s] ", ll);
     fprintf(stderr, log_message);
 
     if (ls <= LS_FAILURE)  // Logging to file has failed or has not been initialized
