@@ -12,7 +12,6 @@
 
 // TODO fix all logging calls and make them standard and proper
 
-// TODO extract functions from this mess, move most of it to server.h/.c
 int main()
 {
     server_start();
