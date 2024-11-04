@@ -15,11 +15,10 @@
 
 // TODO enums for server status and loggin status
 
-// 0 uninitialized, 1 running, -1 failure, -2 non-init failure, -3 out of order call
-static int                     server_status = 0;
-static int                     err           = 0;
-static int                     ssfd          = 0;  // Server socket / file descriptor
-static int                     csfd          = 0;  // Client socket / file descriptor
+static ServerStatus            sst  = SST_UNINITIALIZED;
+static int                     err  = 0;
+static int                     ssfd = 0;  // Server socket / file descriptor
+static int                     csfd = 0;  // Client socket / file descriptor
 static struct addrinfo*        sai;  // Server address info, gives a linked list with >= 1 results
 static struct sockaddr_storage csa;  // Client socket address, can be casted to sockaddr
 static socklen_t               csa_size = sizeof csa;  // Client sock address length
@@ -28,10 +27,10 @@ int server_start()
 {
     wlog_startup();  // Start logging
 
-    if (server_status != 0)
+    if (sst != SST_UNINITIALIZED)
     {
         wlog(FATAL, "Out of order server start call detected.");
-        server_status = -3;
+        sst = SST_OUTOFORDERCALL;
         return EXIT_FAILURE;
     }
 
@@ -40,7 +39,7 @@ int server_start()
     if (sigh_startup() == -1)  // Start signal handling
     {
         wlog(FATAL, "Signal handling setup incomplete.");
-        server_status = -1;
+        sst = SST_FAILURE;
         return EXIT_FAILURE;
     };
 
@@ -57,7 +56,7 @@ int server_start()
     if (err != 0)
     {
         wlog(FATAL, "Failed to get address info. Error %d %s.", err, gai_strerror(err));
-        server_status = -1;
+        sst = SST_FAILURE;
         return EXIT_FAILURE;
     }
 
@@ -69,7 +68,7 @@ int server_start()
     if (ssfd == -1)
     {
         wlog(FATAL, "Failed to create server socket. %d %s.", errno, strerror(errno));
-        server_status = -1;
+        sst = SST_FAILURE;
         return EXIT_FAILURE;
     }
 
@@ -92,7 +91,7 @@ int server_start()
     if (err == -1)
     {
         wlog(FATAL, "Failed to set server socket to non-blocking. %s.", strerror(errno));
-        server_status = -1;
+        sst = SST_FAILURE;
         return EXIT_FAILURE;
     }
 
@@ -104,7 +103,7 @@ int server_start()
     if (err == -1)
     {
         wlog(FATAL, "Failed to bind server socket. %d %s.", errno, strerror(errno));
-        server_status = -1;
+        sst = SST_FAILURE;
         return EXIT_FAILURE;
     }
 
@@ -117,11 +116,11 @@ int server_start()
     if (err == -1)
     {
         wlog(FATAL, "Failed to listen on server socket. %d %s.", errno, strerror(errno));
-        server_status = -1;
+        sst = SST_FAILURE;
         return EXIT_FAILURE;
     }
 
-    server_status = 1;
+    sst = SST_RUNNING;
     wlog(INFO, "Server listening on port %d.", SERVER_PORT);
 
     return EXIT_SUCCESS;
@@ -129,16 +128,16 @@ int server_start()
 
 int server_run()
 {
-    if (server_status == 0)
+    if (sst == SST_UNINITIALIZED)
     {
         wlog(FATAL,
              "Server has not been initialized. "
              "This message will only be displayed once.");
-        server_status = -2;
+        sst = SST_NONINITFAILURE;
         return EXIT_FAILURE;
     }
 
-    if (server_status == -2)
+    if (sst == SST_NONINITFAILURE)
         return EXIT_FAILURE;
 
     char buff[BUFFER_SIZE];
@@ -191,7 +190,7 @@ int server_run()
 
 int server_shutdown()
 {
-    if (server_status == 0)
+    if (sst == SST_UNINITIALIZED)
     {
         fprintf(stderr, "Server shutdown attempt on uninitialized server. exit(1)\n");
         exit(EXIT_FAILURE);
@@ -199,21 +198,19 @@ int server_shutdown()
 
     // int success = server_status != 1 ? 0 : 1;
 
-    wlog(INFO,
-         "Shutting down with %s value...",
-         server_status != 1 ? "EXIT_FAILURE" : "EXIT_SUCCESS");
+    wlog(INFO, "Shutting down with '%s' value...", sst != SST_RUNNING ? "FAILURE" : "SUCCESS");
     close(ssfd);
     close(csfd);
     freeaddrinfo(sai);
     wlog_shutdown();
 
-    if (server_status != 1)
+    if (sst != SST_RUNNING)
     {
-        server_status = 0;
+        sst = SST_UNINITIALIZED;
         return EXIT_FAILURE;
     }
 
-    server_status = 0;
+    sst = SST_UNINITIALIZED;
     return EXIT_SUCCESS;
 }
 

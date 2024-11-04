@@ -9,17 +9,16 @@
 #include <stdlib.h>
 
 // Log level strings
-static const char* log_levels[6] = {"TRACE", "DEBUG", "INFO", "WARN", "ERROR", "FATAL"};
+static const char* log_strings[6] = {"TRACE", "DEBUG", "INFO", "WARN", "ERROR", "FATAL"};
 
 // Local log file stream
 static FILE* lfs;
 
-// 0 uninitialized, 1 successful setup, -1 failure, -2 non-init failure
-static int file_logging_status = 0;
+static LogStatus ls = LS_UNINITIALIZED;
 
 int wlog_startup()
 {
-    if (file_logging_status == -2)
+    if (ls == LS_NONINITFAILURE)
     {
         wlog(ERROR, "Out of order logging initialization. Start up before use.");
         return EXIT_FAILURE;
@@ -29,13 +28,13 @@ int wlog_startup()
 
     if (lfs == NULL)
     {
-        file_logging_status = -1;
+        ls = LS_FAILURE;
         wlog(ERROR, "Error encountered during logging startup: %s\n", strerror(errno));
         wlog(INFO, "Logging to file is now disabled.\n");
         return EXIT_FAILURE;
     }
 
-    file_logging_status = 1;
+    ls = LS_SUCCESSFUL;
     wlog(INFO, "Log file stream opened.");
     return EXIT_SUCCESS;
 };
@@ -55,10 +54,9 @@ int wlog_shutdown()
 
 int wlog(LogLevel lvl, char message[], ...)
 {
-    if (file_logging_status == 0)
+    if (ls == LS_UNINITIALIZED)
     {  // User has forgotten to call wlog_startup()
-        // TODO test this scenario
-        file_logging_status = -2;
+        ls = LS_NONINITFAILURE;
         wlog(ERROR,
              "Logging has not been initialized properly. "
              "This message will only be displayed once.");
@@ -85,7 +83,7 @@ int wlog(LogLevel lvl, char message[], ...)
     get_current_time(log_time, sizeof log_time);  // Get current time (formatted)
 
     char ll[7];  // Log level part of log message, e.g. "[  FATAL  ]"
-    center_text(log_levels[lvl], ll, sizeof ll - 1);
+    center_text(log_strings[lvl], ll, sizeof ll - 1);
 
     /* ------------------------------------------------------------------------------------------ */
 
@@ -94,7 +92,7 @@ int wlog(LogLevel lvl, char message[], ...)
         fprintf(stderr, "[%s] ", ll);
     fprintf(stderr, log_message);
 
-    if (file_logging_status < 0)
+    if (ls <= LS_FAILURE)
     {  // Logging to file has failed or has not been initialized
         return EXIT_FAILURE;
     }
@@ -102,7 +100,7 @@ int wlog(LogLevel lvl, char message[], ...)
     if (!lfs)
     {
         fprintf(stderr, "Log file stream broken. Logging to file is now disabled.");
-        file_logging_status = -1;
+        ls = LS_STREAMBROKEN;
         return EXIT_FAILURE;
     }
 

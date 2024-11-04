@@ -3,6 +3,16 @@
 /* ---------------------------------------------------------------------------------------------- */
 
 #pragma once
+
+typedef enum ServerStatusEnum
+{
+    SST_OUTOFORDERCALL = -3,  // User attempted to start up server while it's running.
+    SST_NONINITFAILURE = -2,  // User attempted to run server before initializing it.
+    SST_FAILURE        = -1,  // Error encountered during server initialization.
+    SST_UNINITIALIZED  = 0,   // Server start has not been called yet.
+    SST_RUNNING        = 1    // Server is currently running.
+} ServerStatus;
+
 // All functions return EXIT_SUCCESS on successful completion or EXIT_FAILURE if an error occurs.
 
 // Initializes the server, sets up socket and signal handling, and binds to the specified port.
