@@ -231,7 +231,6 @@ int server_shutdown()
     return EXIT_SUCCESS;
 }
 
-// TODO  sanitize path as only what's between / and end of string?
 int handle_user_request(int client_socket, char* req)
 {
     // ex.: GET /index.html -> method = "GET", path = "/index.html"
