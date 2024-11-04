@@ -231,30 +231,27 @@ int server_shutdown()
     return EXIT_SUCCESS;
 }
 
+// TODO  sanitize path as only what's between / and end of string?
 int handle_user_request(int client_socket, char* req)
 {
-    // TODO  sanitize path as only what's between / and end of string?
-
     // ex.: GET /index.html -> method = "GET", path = "/index.html"
     char method[8], path[256];
     sscanf(req, "%s %s", method, path);
 
     wlog(INFO, "Request with method \"%s\" and path \"%s\"...", method, path);
 
-    // TODO preciso pensar um pouco melhor em como lidar com esse tipo de acesso,
-    // afinal, se eu retorno um 403, eu estou confirmando que o arquivo realmente existe
-    // Isso talvez não seja ideal.
-
     if (strstr(path, "..") || strstr(path, "//"))
     {
-        wlog(ERROR, "Path traversal attempt detected: %s.", path);
-        send_error_page(csfd, "403 Forbidden", "FORBIDDEN", "You're not supposed to be here.");
+        wlog(WARNING, "Path traversal attempt detected: %s.", path);
+        wlog(INFO, "Sending 403 Forbidden page to user.");
+        send_error_page(csfd, "403 Forbidden", "FORBIDDEN", "GET OUT &#x1F5E3;");
         return EXIT_FAILURE;
     }
 
-    if (path[0] == '/')
+    if (path[0] == '/')  // This is probably be the case regardless, but we should check
     {
-        memmove(path, path + 1, strlen(path));
+        memmove(path + 4, path, strlen(path) + 1);
+        memcpy(path, "data", 4);
     }
 
     wlog(DEBUG, "Changed path to \"%s\".", path);
@@ -262,7 +259,6 @@ int handle_user_request(int client_socket, char* req)
     return send_file(client_socket, path);
 }
 
-// TODO send only files from data folder DO THIS NEXT
 int send_file(int client_socket, const char path[])
 {
     const char* content_type = get_mime_type(path);
@@ -274,7 +270,7 @@ int send_file(int client_socket, const char path[])
     char header[512];
     if (!file)
     {
-        wlog(ERROR, "Failed to open file. Sending 404 page to user.");
+        wlog(WARNING, "Failed to open file. Sending 404 page to user.");
         send_error_page(csfd, "404 Not Found", "404", "Sorry, not found!");
         return EXIT_FAILURE;
     }
@@ -307,6 +303,7 @@ int send_file(int client_socket, const char path[])
         read += bytes_read;
         transfers++;
     }
+
     log_transfer_data(read, sent, transfers);
 
     wlog(INFO, "Done reading file.");
