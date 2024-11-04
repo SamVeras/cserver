@@ -26,3 +26,9 @@ void get_current_time(char buffer[], size_t buff_size);
 
 // Truncates newlines or appends a newline if it's missing.
 void format_log_message(char str[], size_t str_len);
+
+// Convert size in bytes to a human-readable string and store in the buffer.
+void human_readable_size(long bytes, char buffer[], size_t buff_len);
+
+// Print to log how many bytes were sent, in human readable format.
+void log_transfer_data(long read, long sent, long unsigned transfers);

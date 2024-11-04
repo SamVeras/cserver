@@ -10,9 +10,10 @@
 
 /* -------------------------------------------------------------------------- */
 
-static const char* log_strings[6] = {"TRACE", "DEBUG", "INFO", "WARN", "ERROR", "FATAL"};
-static FILE*       lfs;  // Local file stream
-static LogStatus   ls = LS_UNINITIALIZED;
+static const char* log_strings[6] = {
+    "[TRACE]", "[DEBUG]", "[INFO]", "[WARN]", "[ERROR]", "[FATAL]"};
+static FILE*     lfs;  // Local file stream
+static LogStatus ls = LS_UNINITIALIZED;
 
 /* -------------------------------------------------------------------------- */
 
@@ -91,14 +92,13 @@ int wlog(LogLevel lvl, char message[], ...)
     char log_time[20];
     get_current_time(log_time, sizeof log_time);  // Get current time (formatted)
 
-    char ll[7];  // Log level part of log message, e.g. "[  FATAL  ]"
-    center_text(log_strings[lvl], ll, sizeof ll - 1);
+    // char ll[8];  // Log level part of log message, e.g. "[  FATAL  ]"
+    // center_text(log_strings[lvl], ll, sizeof ll - 1);
+    const char* ll = log_strings[lvl];
 
     /* ------------------------------------------------------------------------------------------ */
 
-    fprintf(stderr, "%s ", log_time);
-    fprintf(stderr, "[%s] ", ll);
-    fprintf(stderr, log_message);
+    fprintf(stderr, "%s %s %s", log_time, ll, log_message);
 
     if (ls <= LS_FAILURE)  // Logging to file has failed or has not been initialized
     {
@@ -114,12 +114,7 @@ int wlog(LogLevel lvl, char message[], ...)
 
     /* ------------------------------------------------------------------------------------------ */
 
-    fprintf(lfs, "%s ", log_time);
-
-    if (lvl >= (LogLevel) LOG_LEVEL)
-        fprintf(lfs, "[%s] ", ll);
-
-    fprintf(lfs, "%s", log_message);
+    fprintf(lfs, "%s %s %s", log_time, ll, log_message);
     fflush(lfs);
 
     return EXIT_SUCCESS;

@@ -104,4 +104,33 @@ void format_log_message(char str[], size_t str_len)
         str[str_len]     = '\n';
         str[str_len + 1] = '\0';
     }
+
+    return;
+}
+
+void human_readable_size(long bytes, char buffer[], size_t buff_len)
+{
+    const char* units[] = {"B", "KB", "MB", "GB", "TB"};
+    size_t      unit    = 0;
+    double      b       = (double) bytes;
+
+    while (b >= 1024 && unit < (sizeof units / sizeof(char*)))
+    {
+        b /= 1024;
+        unit++;
+    }
+
+    snprintf(buffer, buff_len, "%.2f %s", b, units[unit]);
+
+    return;
+}
+
+void log_transfer_data(long read, long sent, long unsigned transfers)
+{
+    char read_str[32], sent_str[32];
+    human_readable_size(read, read_str, sizeof read_str);
+    human_readable_size(sent, sent_str, sizeof sent_str);
+    wlog(INFO, "%lu transfers done. %s sent. Total read: %s.", transfers, sent_str, read_str);
+
+    return;
 }

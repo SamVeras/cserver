@@ -7,7 +7,7 @@
 
 #include <stdlib.h>
 
-// TODO fix all logging calls and make them standard and proper
+// TODO fix all logging calls and make them make sense and fit a standard
 
 int main(int argc, char const* argv[])
 {
@@ -17,7 +17,6 @@ int main(int argc, char const* argv[])
     if (server_start() == EXIT_FAILURE)
         return server_shutdown();
 
-    wlog(DEBUG, "This is a debug message. It's just a test.");
     server_run();
 
     return server_shutdown();

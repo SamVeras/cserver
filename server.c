@@ -217,10 +217,11 @@ int server_shutdown()
     freeaddrinfo(sai);  // Can this fail? It has no return value
 
     if (wlog_shutdown())
-        fprintf(stderr, "Non-fatal error during logging shutdown.");
+        fprintf(stderr, "Error during logging shutdown.\n");
 
     if (sst != SST_RUNNING)
     {
+        fprintf(stderr, "Error during shutdown attempt on unitialized or failed server.\n");
         sst = SST_UNINITIALIZED;
         return EXIT_FAILURE;
     }
@@ -288,25 +289,34 @@ int send_file(int client_socket, const char path[])
 
     wlog(INFO, "Sending header to user...");
     ssize_t sent = send(client_socket, header, strlen(header), 0);
+    ssize_t read;
     wlog(INFO, "%d bytes sent.", sent);
 
     char   buffer[BUFFER_SIZE];
     size_t bytes_read;
 
     wlog(INFO, "Reading file with buffer of length %d...", BUFFER_SIZE);
+
     unsigned long transfers = 0;
     sent                    = 0;
+    read                    = 0;
+
     while ((bytes_read = fread(buffer, 1, sizeof(buffer), file)) > 0)
     {
-        // wlog(INFO, "%lu bytes read.", bytes_read);
         sent += send(client_socket, buffer, bytes_read, 0);
+        read += bytes_read;
         transfers++;
-        // wlog(INFO, "%d bytes sent.", sent);
     }
-    wlog(INFO, "%lu transfers done. %ld bytes sent.", transfers, sent);
+    log_transfer_data(read, sent, transfers);
+
     wlog(INFO, "Done reading file.");
 
-    wlog(INFO, "Closing file.");
-    fclose(file);
+    if (fclose(file) != 0)
+    {
+        wlog(WARNING, "Failed to close file: %d %s.", errno, strerror(errno));
+        return EXIT_FAILURE;
+    }
+
+    wlog(INFO, "File closed.");
     return EXIT_SUCCESS;
 }
