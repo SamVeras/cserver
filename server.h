@@ -1,6 +1,6 @@
-/* ---------------------------------------------------------------------------------------------- */
-/*                                      Server functionality                                      */
-/* ---------------------------------------------------------------------------------------------- */
+/* -------------------------------------------------------------------------- */
+/*                            Server functionality                            */
+/* -------------------------------------------------------------------------- */
 
 #pragma once
 
@@ -13,15 +13,16 @@ typedef enum ServerStatusEnum
     SST_RUNNING        = 1    // Server is currently running.
 } ServerStatus;
 
-// All functions return EXIT_SUCCESS on successful completion or EXIT_FAILURE if an error occurs.
+/* -------------------------------------------------------------------------- */
+// All functions return EXIT_SUCCESS or EXIT_FAILURE if an error occurs.
 
-// Initializes the server, sets up socket and signal handling, and binds to the specified port.
+// Initializes the server, sets up socket, signal handling, and binds to port.
 int server_start();
 
-// Runs the main loop, accepting and handling client requests until a shutdown is requested.
+// Runs main loop, accepts and handles client requests until a shutdown request.
 int server_run();
 
-// Shuts down the server, closes sockets, cleans up resources.
+// Shuts down the server, closes sockets and cleans up resources.
 int server_shutdown();
 
 // Handles client request, parses HTTP method and path.

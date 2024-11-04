@@ -8,13 +8,13 @@
 #include <errno.h>
 #include <stdlib.h>
 
-// Log level strings
+/* -------------------------------------------------------------------------- */
+
 static const char* log_strings[6] = {"TRACE", "DEBUG", "INFO", "WARN", "ERROR", "FATAL"};
+static FILE*       lfs;  // Local file stream
+static LogStatus   ls = LS_UNINITIALIZED;
 
-// Local log file stream
-static FILE* lfs;
-
-static LogStatus ls = LS_UNINITIALIZED;
+/* -------------------------------------------------------------------------- */
 
 int wlog_startup()
 {
@@ -39,6 +39,8 @@ int wlog_startup()
     return EXIT_SUCCESS;
 };
 
+/* -------------------------------------------------------------------------- */
+
 int wlog_shutdown()
 {
     if (lfs)
@@ -52,10 +54,12 @@ int wlog_shutdown()
     return EXIT_FAILURE;
 }
 
+/* -------------------------------------------------------------------------- */
+
 int wlog(LogLevel lvl, char message[], ...)
 {
-    if (ls == LS_UNINITIALIZED)
-    {  // User has forgotten to call wlog_startup()
+    if (ls == LS_UNINITIALIZED)  // User has forgotten to call wlog_startup()
+    {
         ls = LS_NONINITFAILURE;
         wlog(ERROR,
              "Logging has not been initialized properly. "
@@ -63,8 +67,8 @@ int wlog(LogLevel lvl, char message[], ...)
         return EXIT_FAILURE;
     }
 
-    if (message[0] == '\0' || message[0] == '\n')
-    {  // Checking if message is empty or begins with newline
+    if (message[0] == '\0' || message[0] == '\n')  // Check if message is empty
+    {
         wlog(INFO, "Empty log message, what the sigma?");
         return EXIT_FAILURE;
     }
@@ -92,8 +96,8 @@ int wlog(LogLevel lvl, char message[], ...)
         fprintf(stderr, "[%s] ", ll);
     fprintf(stderr, log_message);
 
-    if (ls <= LS_FAILURE)
-    {  // Logging to file has failed or has not been initialized
+    if (ls <= LS_FAILURE)  // Logging to file has failed or has not been initialized
+    {
         return EXIT_FAILURE;
     }
 

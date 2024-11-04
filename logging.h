@@ -1,6 +1,6 @@
-/* ---------------------------------------------------------------------------------------------- */
-/*                                             Logging                                            */
-/* ---------------------------------------------------------------------------------------------- */
+/* -------------------------------------------------------------------------- */
+/*                                   Logging                                  */
+/* -------------------------------------------------------------------------- */
 
 #pragma once
 #include <stdio.h>
@@ -23,6 +23,8 @@ typedef enum FileLogStatusEnum
     LS_UNINITIALIZED  = 0,   // Logging functionality has not been initialized yet. Default state.
     LS_SUCCESSFUL     = 1    // Logging to file successfully started.
 } LogStatus;
+
+/* -------------------------------------------------------------------------- */
 
 // Attempt to set up logging to file
 int wlog_startup();
