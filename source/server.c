@@ -186,7 +186,8 @@ int server_run()
             buff[rb] = '\0';  // set null terminator
             wlog(DEBUG, "Received %d bytes.", rb, buff);
 
-            handle_user_request(csfd, buff);
+            if (handle_user_request(csfd, buff))
+                wlog(ERROR, "Failure during user request handling.");
 
             close(csfd);
         }
@@ -232,7 +233,7 @@ int server_shutdown()
 
 int handle_user_request(int client_socket, char* req)
 {
-    // TODO maybe sanitize path as only what's between / and end of string?
+    // TODO  sanitize path as only what's between / and end of string?
 
     // ex.: GET /index.html -> method = "GET", path = "/index.html"
     char method[8], path[256];
@@ -240,9 +241,14 @@ int handle_user_request(int client_socket, char* req)
 
     wlog(INFO, "Request with method \"%s\" and path \"%s\"...", method, path);
 
+    // TODO preciso pensar um pouco melhor em como lidar com esse tipo de acesso,
+    // afinal, se eu retorno um 403, eu estou confirmando que o arquivo realmente existe
+    // Isso talvez não seja ideal.
+
     if (strstr(path, "..") || strstr(path, "//"))
     {
         wlog(ERROR, "Path traversal attempt detected: %s.", path);
+        send_error_page(csfd, "403 Forbidden", "FORBIDDEN", "You're not supposed to be here.");
         return EXIT_FAILURE;
     }
 
@@ -256,10 +262,9 @@ int handle_user_request(int client_socket, char* req)
     return send_file(client_socket, path);
 }
 
-// TODO send only files from data folder
+// TODO send only files from data folder DO THIS NEXT
 int send_file(int client_socket, const char path[])
 {
-    const char* body;
     const char* content_type = get_mime_type(path);
     wlog(TRACE, "Determined content-type to be %s.", content_type);
 
@@ -270,12 +275,7 @@ int send_file(int client_socket, const char path[])
     if (!file)
     {
         wlog(ERROR, "Failed to open file. Sending 404 page to user.");
-
-        body = "<html><body><h1>404 Not Found</h1><p>Sorry, not found.</p></body></html>";
-        build_html_header(header, sizeof header, "404 Not Found", "text/html", strlen(body));
-
-        send(client_socket, header, strlen(header), 0);
-        send(client_socket, body, strlen(body), 0);
+        send_error_page(csfd, "404 Not Found", "404", "Sorry, not found!");
         return EXIT_FAILURE;
     }
 
@@ -318,5 +318,29 @@ int send_file(int client_socket, const char path[])
     }
 
     wlog(INFO, "File closed.");
+    return EXIT_SUCCESS;
+}
+
+int send_error_page(int client_socket, const char* code, const char* title, const char* message)
+{
+    char    header[512], body[512];
+    ssize_t sent;
+
+    snprintf(body, sizeof(body), "<html><body><h1>%s</h1><p>%s</p></body></html>", title, message);
+
+    build_html_header(header, sizeof(header), code, "text/html", strlen(body));
+
+    wlog(INFO, "Sending error %s header to user...", code);
+    sent = send(client_socket, header, strlen(header), 0);
+    if (sent == -1)
+        wlog(ERROR, "Failed to send %s error header.", code);
+    wlog(INFO, "%d bytes sent.", sent);
+
+    wlog(INFO, "Sending error %s body to user...", code);
+    sent = send(client_socket, body, strlen(body), 0);
+    if (sent == -1)
+        wlog(ERROR, "Failed to send %s error body.", code);
+    wlog(INFO, "%d bytes sent.", sent);
+
     return EXIT_SUCCESS;
 }

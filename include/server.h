@@ -30,3 +30,6 @@ int handle_user_request(int client_socket, char* req);
 
 // Constructs headers and sends the requested file to the client in chunks.
 int send_file(int client_socket, const char path[]);
+
+// Send formatted error page to user.
+int send_error_page(int client_socket, const char* code, const char* title, const char* message);
