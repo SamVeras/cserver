@@ -13,8 +13,6 @@
 #include <fcntl.h>
 #include <unistd.h>
 
-// TODO enums for server status and loggin status
-
 static ServerStatus            sst  = SST_UNINITIALIZED;
 static int                     err  = 0;
 static int                     ssfd = 0;  // Server socket / file descriptor
@@ -51,7 +49,9 @@ int server_start()
 
     wlog(INFO, "Getting local address info...");
 
-    err = getaddrinfo(NULL, STR(SERVER_PORT), &hints, &sai);
+    char port_string[6];  // Getaddrinfo requires port as a string.
+    snprintf(port_string, sizeof port_string, "%d", SERVER_PORT);
+    err = getaddrinfo(NULL, port_string, &hints, &sai);
 
     if (err != 0)
     {
@@ -120,8 +120,18 @@ int server_start()
         return EXIT_FAILURE;
     }
 
+    struct sockaddr_in addr;
+    socklen_t          addr_len = sizeof addr;
+
+    if (getsockname(ssfd, (struct sockaddr*) &addr, &addr_len) == -1)
+    {
+        wlog(FATAL, "Failed to get socket name. %d %s.", errno, strerror(errno));
+        sst = SST_FAILURE;
+        return EXIT_FAILURE;
+    }
+
     sst = SST_RUNNING;
-    wlog(INFO, "Server listening on port %d.", SERVER_PORT);
+    wlog(INFO, "Server listening on port %d.", ntohs(addr.sin_port));
 
     return EXIT_SUCCESS;
 }
@@ -141,7 +151,7 @@ int server_run()
         return EXIT_FAILURE;
 
     char buff[BUFFER_SIZE];
-    int  rb = -1;  // Received bytes
+    int  rb = 0;  // Received bytes
 
     while (!shut_req)
     {
@@ -196,13 +206,17 @@ int server_shutdown()
         exit(EXIT_FAILURE);
     }
 
-    // int success = server_status != 1 ? 0 : 1;
-
     wlog(INFO, "Shutting down with '%s' value...", sst != SST_RUNNING ? "FAILURE" : "SUCCESS");
-    close(ssfd);
-    close(csfd);
-    freeaddrinfo(sai);
-    wlog_shutdown();
+    if (close(ssfd) == -1)
+        wlog(WARNING, "Failed to close server socket: %d %s.", errno, strerror(errno));
+
+    if (close(csfd) == -1)
+        wlog(WARNING, "Failed to close client socket: %d %s.", errno, strerror(errno));
+
+    freeaddrinfo(sai);  // Can this fail? It has no return value
+
+    if (wlog_shutdown())
+        fprintf(stderr, "Non-fatal error during logging shutdown.");
 
     if (sst != SST_RUNNING)
     {

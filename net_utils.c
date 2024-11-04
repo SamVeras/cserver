@@ -99,7 +99,7 @@ void format_log_message(char str[], size_t str_len)
     }
 
     // If no newline and there's room, append newline
-    if (str_len < BUFFER_SIZE - 1)
+    if (str_len < (size_t) (BUFFER_SIZE - 1))
     {
         str[str_len]     = '\n';
         str[str_len + 1] = '\0';

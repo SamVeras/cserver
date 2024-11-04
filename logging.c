@@ -24,7 +24,7 @@ int wlog_startup()
         return EXIT_FAILURE;
     }
 
-    lfs = fopen(STR(LOG_FILE_NAME), "a");  // Open log_event file stream
+    lfs = fopen(LOG_FILE_NAME, "a");  // Open log_event file stream
 
     if (lfs == NULL)
     {
@@ -92,7 +92,7 @@ int wlog(LogLevel lvl, char message[], ...)
     /* ------------------------------------------------------------------------------------------ */
 
     fprintf(stderr, "%s ", log_time);
-    if (lvl >= LOG_LEVEL)
+    if (lvl >= (LogLevel) LOG_LEVEL)
         fprintf(stderr, "[%s] ", ll);
     fprintf(stderr, log_message);
 
@@ -112,7 +112,7 @@ int wlog(LogLevel lvl, char message[], ...)
 
     fprintf(lfs, "%s ", log_time);
 
-    if (lvl >= LOG_LEVEL)
+    if (lvl >= (LogLevel) LOG_LEVEL)
         fprintf(lfs, "[%s] ", ll);
 
     fprintf(lfs, "%s", log_message);

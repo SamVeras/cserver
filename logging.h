@@ -20,7 +20,7 @@ typedef enum FileLogStatusEnum
     LS_STREAMBROKEN   = -3,  // Stream to log file broken during runtime.
     LS_NONINITFAILURE = -2,  // User attempted to use logging before initializing.
     LS_FAILURE        = -1,  // Logging initialization failed.
-    LS_UNINITIALIZED  = 0,   // Logging functionality has not been initialized yet. Default state.
+    LS_UNINITIALIZED  = 0,   // Logging functionality has not been initialized yet.
     LS_SUCCESSFUL     = 1    // Logging to file successfully started.
 } LogStatus;
 
