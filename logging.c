@@ -6,6 +6,7 @@
 #include <string.h>
 #include <stdarg.h>
 #include <errno.h>
+#include <stdlib.h>
 
 // Log level strings
 static const char* log_levels[6] = {"TRACE", "DEBUG", "INFO", "WARN", "ERROR", "FATAL"};
@@ -13,11 +14,17 @@ static const char* log_levels[6] = {"TRACE", "DEBUG", "INFO", "WARN", "ERROR", "
 // Local log file stream
 static FILE* lfs;
 
-// 0 for uninitialized, 1 for successful setup, -1 for failure
+// 0 uninitialized, 1 successful setup, -1 failure, -2 non-init failure
 static int file_logging_status = 0;
 
-void wlog_startup()
+int wlog_startup()
 {
+    if (file_logging_status == -2)
+    {
+        wlog(ERROR, "Out of order logging initialization. Start up before use.");
+        return EXIT_FAILURE;
+    }
+
     lfs = fopen(STR(LOG_FILE_NAME), "a");  // Open log_event file stream
 
     if (lfs == NULL)
@@ -25,34 +32,46 @@ void wlog_startup()
         file_logging_status = -1;
         wlog(ERROR, "Error encountered during logging startup: %s\n", strerror(errno));
         wlog(INFO, "Logging to file is now disabled.\n");
-        return;
+        return EXIT_FAILURE;
     }
 
-    wlog(INFO, "Log file stream opened.");
     file_logging_status = 1;
+    wlog(INFO, "Log file stream opened.");
+    return EXIT_SUCCESS;
 };
 
-void wlog_shutdown()
+int wlog_shutdown()
 {
     if (lfs)
     {
         wlog(INFO, "Closing log file stream.");
         fclose(lfs);
+        return EXIT_SUCCESS;
     }
+
+    wlog(WARNING, "Closing log file failed: file stream is not open.");
+    return EXIT_FAILURE;
 }
 
-/* Logs date and message to both stderr and local log file.*/
-void wlog(LogLevel lvl, char message[], ...)
+int wlog(LogLevel lvl, char message[], ...)
 {
-    // Checking if message is empty or begins with newline
-    if (message[0] == '\0' || message[0] == '\n')
-    {
-        wlog(INFO, "Empty log message, what the sigma?");
-        return;
+    if (file_logging_status == 0)
+    {  // User has forgotten to call wlog_startup()
+        // TODO test this scenario
+        file_logging_status = -2;
+        wlog(ERROR,
+             "Logging has not been initialized properly. "
+             "This message will only be displayed once.");
+        return EXIT_FAILURE;
     }
 
-    // Create mutable copy of message
-    char log_message[256];
+    if (message[0] == '\0' || message[0] == '\n')
+    {  // Checking if message is empty or begins with newline
+        wlog(INFO, "Empty log message, what the sigma?");
+        return EXIT_FAILURE;
+    }
+
+    char log_message[256];  // Create mutable copy of message
     strncpy(log_message, message, sizeof log_message - 1);
 
     // Create and initialize variable argument list object, then format message copy
@@ -62,12 +81,10 @@ void wlog(LogLevel lvl, char message[], ...)
     format_log_message(log_message, strlen(log_message));
     va_end(args);
 
-    // Get current time (formatted)
     char log_time[20];
-    get_current_time(log_time, sizeof log_time);
+    get_current_time(log_time, sizeof log_time);  // Get current time (formatted)
 
-    // Log level part of log message, e.g. "[  FATAL  ]"
-    char ll[7];
+    char ll[7];  // Log level part of log message, e.g. "[  FATAL  ]"
     center_text(log_levels[lvl], ll, sizeof ll - 1);
 
     /* ------------------------------------------------------------------------------------------ */
@@ -77,14 +94,16 @@ void wlog(LogLevel lvl, char message[], ...)
         fprintf(stderr, "[%s] ", ll);
     fprintf(stderr, log_message);
 
-    if (file_logging_status == -1)
-        return;
+    if (file_logging_status < 0)
+    {  // Logging to file has failed or has not been initialized
+        return EXIT_FAILURE;
+    }
 
     if (!lfs)
     {
         fprintf(stderr, "Log file stream broken. Logging to file is now disabled.");
         file_logging_status = -1;
-        return;
+        return EXIT_FAILURE;
     }
 
     /* ------------------------------------------------------------------------------------------ */
@@ -97,5 +116,5 @@ void wlog(LogLevel lvl, char message[], ...)
     fprintf(lfs, "%s", log_message);
     fflush(lfs);
 
-    return;
+    return EXIT_SUCCESS;
 }

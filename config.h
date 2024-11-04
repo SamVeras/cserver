@@ -3,6 +3,8 @@
 #define _STR(X) #X
 #define STR(X)  _STR(X)
 
+// TODO Get options from file?
+
 #define LOG_FILE_NAME server.log
 #define SERVER_PORT   9902
 #define BUFFER_SIZE   1024

@@ -16,10 +16,10 @@ typedef enum LogLevelEnum
 } LogLevel;
 
 // Attempt to set up logging to file
-void wlog_startup();
+int wlog_startup();
 
 // Logging shutdown procedures, such as closing log file stream
-void wlog_shutdown();
+int wlog_shutdown();
 
-// Main logging function
-void wlog(LogLevel lvl, char message[], ...);
+// Main logging function, logs date and message to both stderr and local log file
+int wlog(LogLevel lvl, char message[], ...);
