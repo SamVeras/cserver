@@ -275,11 +275,14 @@ int server_shutdown()
     }
 
     wlog(INFO, "Shutting down with '%s' value...", sst != SST_RUNNING ? "FAILURE" : "SUCCESS");
-    if (close(ssfd) == -1)
+    if (ssfd && close(ssfd) == -1)
         wlog(WARNING, "Failed to close server socket: %d %s.", errno, strerror(errno));
 
-    if (close(csfd) == -1)
+    if (csfd && close(csfd) == -1)
         wlog(WARNING, "Failed to close client socket: %d %s.", errno, strerror(errno));
+
+    // Note: && is a short-circuiting AND, it means that the second condition will not be checked
+    // (and that there will be no attempt to close the sockets) if the first one fails.
 
     freeaddrinfo(sai);  // Can this fail? It has no return value
 
