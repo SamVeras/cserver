@@ -11,7 +11,6 @@
 // TODO make "private" functions with static?
 // TODO show who we are connected to during handling
 // TODO file directory? tree? index?
-
 int main(int argc, char const* argv[])
 {
     if (config_server(argc, argv))
@@ -24,3 +23,6 @@ int main(int argc, char const* argv[])
 
     return server_shutdown();
 }
+
+// NOTE we could use static char buffers instead of buffer pointers and lengths
+// It would be safe since we use child processes instead of concurrency
