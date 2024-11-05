@@ -3,8 +3,7 @@
 /* ---------------------------------------------------------------------------------------------- */
 
 #pragma once
-
-#include <stddef.h>  // size_t
+#include <stddef.h>
 #include <time.h>
 
 // Extract file extension and use it to return an appropriate mime_type.

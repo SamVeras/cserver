@@ -9,6 +9,7 @@ int      BUFFER_SIZE   = -1;
 int      BACKLOG       = -1;
 LogLevel LOG_LEVEL     = -1;
 int      SERVER_PORT   = -1;
+int      MAX_CLIENTS   = -1;
 char*    LOG_FILE_NAME = "";
 
 int parse_arg(const char* arg, const char* value, int* target)
@@ -45,6 +46,7 @@ int config_server(int argc, char const* argv[])
     LOG_LEVEL         = INFO;  // Messages of this level and above will be shown
     int log_level_int = 2;
     BACKLOG           = 5;     // Connection queue size
+    MAX_CLIENTS       = 10;
     LOG_FILE_NAME     = "server.log";
 
     if (argc == 1)
@@ -62,15 +64,15 @@ int config_server(int argc, char const* argv[])
             return EXIT_FAILURE;
         }
 
-        if (strcmp("-p", argv[i]) == 0)
-        {
+        if ((strcmp("-p", argv[i]) && strcmp("--port", argv[i])) == 0)
+        {  // ( ¬A or ¬B ) === ¬( A and B )
             i++;
             if (parse_arg(argv[i - 1], argv[i], &SERVER_PORT))
             {
                 return EXIT_FAILURE;
             }
         }
-        else if (strcmp("-b", argv[i]) == 0)
+        else if ((strcmp("-b", argv[i]) && strcmp("--buffer-size", argv[i])) == 0)
         {
             i++;
             if (parse_arg(argv[i - 1], argv[i], &BUFFER_SIZE))
@@ -78,7 +80,7 @@ int config_server(int argc, char const* argv[])
                 return EXIT_FAILURE;
             }
         }
-        else if (strcmp("-l", argv[i]) == 0)
+        else if ((strcmp("-l", argv[i]) && strcmp("--log-level", argv[i])) == 0)
         {
             i++;
             if (parse_arg(argv[i - 1], argv[i], &log_level_int))
@@ -86,7 +88,7 @@ int config_server(int argc, char const* argv[])
                 return EXIT_FAILURE;
             }
         }
-        else if (strcmp("-c", argv[i]) == 0)
+        else if ((strcmp("-c", argv[i]) && strcmp("--backlog", argv[i])) == 0)
         {
             i++;
             if (parse_arg(argv[i - 1], argv[i], &BACKLOG))
@@ -94,10 +96,21 @@ int config_server(int argc, char const* argv[])
                 return EXIT_FAILURE;
             }
         }
-        else if (strcmp("-f", argv[i]) == 0)
+
+        else if ((strcmp(argv[1], "-m") && strcmp(argv[1], "--max-clients")) == 0)
+        {
+            i++;
+            if (parse_arg(argv[i - 1], argv[i], &MAX_CLIENTS))
+            {
+                return EXIT_FAILURE;
+            }
+        }
+
+        else if ((strcmp("-f", argv[i]) && strcmp("--log-file", argv[i])) == 0)
         {
             LOG_FILE_NAME = strdup(argv[++i]);
         }
+
         else
         {
             fprintf(stderr, "Unknown option: %s.\n", argv[i]);
@@ -137,6 +150,12 @@ int config_server(int argc, char const* argv[])
                 "Backlog size out of allowed range: %d."
                 "Valid values in range [1, 1024]\n",
                 BACKLOG);
+        return EXIT_FAILURE;
+    }
+
+    if (MAX_CLIENTS < 1)
+    {
+        fprintf(stderr, "Max clients must be a positive retard\n");
         return EXIT_FAILURE;
     }
 
@@ -195,5 +214,11 @@ void config_help()
             "Name of file to write log to. "
             "Will be created if it does not exist. "
             "If specified, file name must not be empty. "
-            "Defaults to server.log.\n");
+            "Defaults to server.log.\n"
+
+            "-m, --max-clients MAXCLIENTS\t"
+            "Maximum number of client connections the server can handle simultaneously."
+            "Must be a positive, non-zero value."
+            "Currently unused! /shrug."
+            "Defaults to 10.");
 }

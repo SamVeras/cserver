@@ -33,3 +33,6 @@ int send_file(int client_socket, const char path[]);
 
 // Send formatted error page to user.
 int send_error_page(int client_socket, const char* code, const char* title, const char* message);
+
+// Handle specific clients in forks.
+int server_client_handler(int client_socket);

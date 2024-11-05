@@ -68,16 +68,14 @@ int wlog(LogLevel lvl, char message[], ...)
         return EXIT_FAILURE;
     }
 
-    if (message[0] == '\0' || message[0] == '\n')  // Check if message is empty
+    if (lvl < LOG_LEVEL)  // Should this message even be printed?
+        return EXIT_SUCCESS;
+
+    if (message[0] == '\0' || message[0] == '\n')  // Check if message is empty.
     {
         wlog(INFO, "Empty log message, what the sigma?");
         return EXIT_FAILURE;
     }
-
-    // if (lvl >= LOG_LEVEL)
-    //     continue;
-    if (lvl < LOG_LEVEL)
-        return EXIT_SUCCESS;
 
     char log_message[256];  // Create mutable copy of message
     strncpy(log_message, message, sizeof log_message - 1);

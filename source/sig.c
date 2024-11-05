@@ -4,20 +4,24 @@
 #include <string.h>
 
 static struct sigaction sa;
+volatile sig_atomic_t   shut_req = 0;
 
 void sigh(int signal)
 {
     wlog(INFO, "Shutdown requested after receiving signal %d.", signal);
     shut_req = 1;
-    return;
+    // __sync_synchronize();
+    wlog(TRACE, "Shutdown_request is now %d", shut_req);
+    // return;
 }
 
+// TODO Fit return into standard success / failure
 int sigh_startup()
 {
     wlog(INFO, "Setting up signal handling...");
-    sa.sa_handler = sigh;
     sigemptyset(&sa.sa_mask);
-    sa.sa_flags = 0;
+    sa.sa_handler = sigh;
+    sa.sa_flags   = SA_RESTART;
 
     if (sigaction(SIGINT, &sa, NULL) == -1)  // Interactive attention signal
     {
@@ -31,6 +35,6 @@ int sigh_startup()
         return -1;
     }
 
-    wlog(INFO, "Signal handling startup complete.");
+    wlog(TRACE, "Signal handling startup complete.");
     return 0;
 }

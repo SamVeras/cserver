@@ -12,6 +12,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <poll.h>
 
 static ServerStatus            sst  = SST_UNINITIALIZED;
 static int                     err  = 0;
@@ -24,6 +25,8 @@ static socklen_t               csa_size = sizeof csa;  // Client sock address le
 int server_start()
 {
     wlog_startup();  // Start logging
+
+    wlog(DEBUG, "Checking server status during initialization attempt. (%d)", (int) sst);
 
     if (sst != SST_UNINITIALIZED)
     {
@@ -60,7 +63,7 @@ int server_start()
         return EXIT_FAILURE;
     }
 
-    wlog(INFO, "Get address operation successful.");
+    wlog(DEBUG, "Get address operation successful.");
 
     wlog(INFO, "Creating server socket...");
     ssfd = socket(sai->ai_family, sai->ai_socktype, sai->ai_protocol);
@@ -72,19 +75,15 @@ int server_start()
         return EXIT_FAILURE;
     }
 
-    wlog(INFO, "Server socket created.");
+    wlog(DEBUG, "Server socket created.");
 
     wlog(INFO, "Setting socket option %d (SO_REUSEADDR)...", SO_REUSEADDR);
     err = setsockopt(ssfd, SOL_SOCKET, SO_REUSEADDR, &(int){1}, sizeof(int));
 
     if (err == -1)
-    {
         wlog(ERROR, "Failed to set socket option. %d %s.", errno, strerror(errno));
-    }
-    else
-    {
-        wlog(INFO, "Socket option successfully set.");
-    }
+
+    wlog(DEBUG, "Socket option successfully set.");
 
     wlog(INFO, "Setting server socket to non-blocking...");
     err = fcntl(ssfd, F_SETFL, fcntl(ssfd, F_GETFL, 0) | O_NONBLOCK);
@@ -96,7 +95,7 @@ int server_start()
         return EXIT_FAILURE;
     }
 
-    wlog(INFO, "Server socket set successfully set to non-blocking.");
+    wlog(DEBUG, "Server socket successfully set to non-blocking.");
 
     wlog(INFO, "Binding server socket with port on local machine...");
     err = bind(ssfd, sai->ai_addr, sai->ai_addrlen);
@@ -108,7 +107,7 @@ int server_start()
         return EXIT_FAILURE;
     }
 
-    wlog(INFO, "Server socket bound.");
+    wlog(DEBUG, "Server socket bound.");
 
     // Mark server socket as passive, ready to accept connections
     wlog(INFO, "Marking server socket as passive (listen)...");
@@ -151,53 +150,120 @@ int server_run()
     if (sst == SST_NONINITFAILURE)
         return EXIT_FAILURE;
 
-    char buff[BUFFER_SIZE];
-    int  rb = 0;  // Received bytes
+    struct pollfd polled;  // We will only monitor 1 socket
+    int           event_count = 0;
 
+    polled.fd     = ssfd;    // Server
+    polled.events = POLLIN;  // Poll incoming connections
+
+    wlog(TRACE, "Entering main loop...");
     while (!shut_req)
     {
-        struct timeval timeout = {.tv_sec = 1, .tv_usec = 0};
-        fd_set         mon;  // Monitored sockets file descriptors
-        FD_ZERO(&mon);       // Clear set
-        FD_SET(ssfd, &mon);  // Set server socket to be monitored
-
-        int activity = select(ssfd + 1, &mon, NULL, NULL, &timeout);
-
-        if (activity == -1)
+        wlog(TRACE, "Polling with 1.5s timeout...");
+        event_count = poll(&polled, 1, 1500);  // 1.5 second timeout
+        if (event_count < 0)
         {
-            wlog(ERROR, "Select error: %s.", strerror(errno));
-            return EXIT_FAILURE;
+            if (errno == EINTR)  // Interrupted by a signal
+            {
+                if (shut_req)    // Do we need to exit?
+                {
+                    wlog(INFO, "Shutdown requested during polling.");
+                    break;
+                }
+
+                wlog(FATAL, "EINTR detected, but shutdown request = %d.", shut_req);
+                wlog(INFO, "This should not happen. Manually requesting shutdown.");
+                shut_req = 1;
+                break;  // This should NOT happen
+            }
+
+            wlog(ERROR, "Polling failed: (%d) %s.", errno, strerror(errno));
+            continue;
         }
 
-        if (activity > 0)
+        if (event_count == 0)
         {
-            if (FD_ISSET(ssfd, &mon))  // Check if server socket fd not in set for some reason
+            wlog(TRACE, "Continue polling...");
+            continue;
+        }
+
+        if (polled.revents & POLLIN)
+        {
+            wlog(TRACE, "POLLIN event received.");
+
+            csfd = accept(ssfd, (struct sockaddr*) &csa, &csa_size);
+            if (csfd == -1)
             {
-                csfd = accept(ssfd, (struct sockaddr*) &csa, &csa_size);
-                if (csfd == -1)
-                {
-                    wlog(ERROR, "Failed to accept connection. %d %s.", errno, strerror(errno));
-                    continue;
-                }
+                wlog(ERROR, "Failed to accept connection. (%d) %s.", errno, strerror(errno));
+                continue;
             }
 
             wlog(INFO, "Request accepted. Connected to socket.");
-            rb       = recv(csfd, buff, sizeof buff, 0);
-            buff[rb] = '\0';  // set null terminator
-            wlog(DEBUG, "Received %d bytes.", rb, buff);
+            wlog(TRACE, "Forking...");
 
-            if (handle_user_request(csfd, buff))
-                wlog(ERROR, "Failure during user request handling.");
+            // Fork returns PID of child process to parent, but returns 0 to the child itself.
+            pid_t pid = fork();
 
-            close(csfd);
+            if (pid == -1)
+            {
+                wlog(ERROR, "Failed to fork proccess: (%d) %s.", errno, strerror(errno));
+                close(csfd);
+                continue;
+            }
+
+            if (pid == 0)         // We are a Child
+            {
+                if (close(ssfd))  // Listening is unnecesary
+                    wlog(WARNING, "[%d] Failed to close server socket.", getpid());
+
+                if (server_client_handler(csfd))
+                    wlog(WARNING, "[%d] Failure during client handling.", getpid());
+
+                if (close(csfd))  // Done
+                    wlog(WARNING, "[%d] Failed to close client socket.", getpid());
+
+                exit(EXIT_SUCCESS);  // Kill child
+            }
+
+            // else...
+            close(csfd);  // Close because only the child needs this
         }
 
         if (shut_req)
-            return EXIT_SUCCESS;
+        {
+            wlog(INFO, "Shutdown requested after handling events.");
+            break;  // Exit the loop if shutdown is requested
+        }
     }
 
-    wlog(DEBUG, "Main loop broken without shutdown request?");
+    wlog(INFO, "Server no longer running.");
     return EXIT_SUCCESS;
+}
+
+int server_client_handler(int client_socket)
+{
+    char buff[BUFFER_SIZE];                                      // Buffer
+    int  rec_bytes = recv(client_socket, buff, sizeof buff, 0);  // Bytes received
+
+    if (rec_bytes < 0)
+    {
+        wlog(ERROR, "Failed to receive data: (%d) %s.", errno, strerror(errno));
+        return EXIT_FAILURE;
+    }
+
+    buff[rec_bytes] = '\0';
+    char rec_str[32];  // TODO why is this not an array? a pointer? what?
+    human_readable_size(rec_bytes, rec_str, sizeof rec_str);
+    wlog(INFO, "Received %s.", rec_str);
+
+    if (handle_user_request(client_socket, buff))
+    {
+        wlog(ERROR, "Failure during request handling.");
+        return EXIT_FAILURE;
+    }
+
+    return EXIT_SUCCESS;
+    // Client socked is closed in server_run() after forking.
 }
 
 int server_shutdown()
@@ -247,6 +313,13 @@ int handle_user_request(int client_socket, char* req)
         return EXIT_FAILURE;
     }
 
+    wlog(TRACE, "path: %s, len: %d, sizeof: %d.", path, strlen(path), sizeof path);
+
+    if (strlen(path) == 1)
+    {
+        snprintf(path, sizeof path, "data/index.html");  // Página "padrão"
+    }
+
     if (path[0] == '/')  // This is probably be the case regardless, but we should check
     {
         memmove(path + 4, path, strlen(path) + 1);
@@ -261,7 +334,7 @@ int handle_user_request(int client_socket, char* req)
 int send_file(int client_socket, const char path[])
 {
     const char* content_type = get_mime_type(path);
-    wlog(TRACE, "Determined content-type to be %s.", content_type);
+    wlog(DEBUG, "Determined content-type to be %s.", content_type);
 
     wlog(INFO, "Opening file at %s and creating stream...", path);
     FILE* file = fopen(path, "rb");
