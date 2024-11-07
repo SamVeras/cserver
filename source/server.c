@@ -53,6 +53,18 @@ static struct sockaddr_storage csa;
  * Length of the client socket address. */
 static socklen_t csa_size = sizeof csa;
 
+/**
+ * @brief Favicon file name.
+ * Name of the favicon file to be served when receiving a request for
+ * /favicon.ico. */
+static const char* favicon = "favicon32.png";
+
+/**
+ * @brief Landing page file name.
+ * Name of the landing page file to be served when the user requests
+ * the root directory. */
+static const char* landing = "index.html";
+
 /* -------------------------------------------------------------------------- */
 
 int server_start()
@@ -352,7 +364,7 @@ int handle_user_request(int client_socket, char* req)
     if (strstr(path, "..") || strstr(path, "//"))
     {
         wlog(WARNING, "Path traversal attempt detected: %s.", path);
-        wlog(INFO, "Sending 403 Forbidden page to user.");
+        wlog(INFO, "Attempting to send 403 Forbidden page to user...");
         send_error_page(csfd, "403 Forbidden", "FORBIDDEN", "GET OUT &#x1F5E3;");
         return EXIT_FAILURE;
     }
@@ -361,7 +373,14 @@ int handle_user_request(int client_socket, char* req)
 
     if (strlen(path) == 1)
     {
-        snprintf(path, sizeof path, "data/index.html");  // Página "padrão"
+        wlog(DEBUG, "Root request.");
+        snprintf(path, sizeof path, "data/%s", landing);  // Página "padrão"
+    }
+
+    if (strcmp(path, "/favicon.ico") == 0)
+    {
+        wlog(DEBUG, "Favicon request.");
+        snprintf(path, sizeof path, "data/%s", favicon);  // Favicon
     }
 
     if (path[0] == '/')  // This is probably be the case regardless, but we should check
@@ -449,17 +468,17 @@ int send_error_page(int client_socket, const char* code, const char* title, cons
     // Build the error page header
     build_html_header(header, sizeof(header), code, "text/html", strlen(body));
 
-    wlog(INFO, "Sending error %s header to user...", code);
+    wlog(TRACE, "Sending error %s header to user...", code);
     sent = send(client_socket, header, strlen(header), 0);
     if (sent == -1)
         wlog(ERROR, "Failed to send %s error header.", code);
-    wlog(INFO, "%d bytes sent.", sent);
+    wlog(TRACE, "%d bytes sent.", sent);
 
-    wlog(INFO, "Sending error %s body to user...", code);
+    wlog(TRACE, "Sending error %s body to user...", code);
     sent = send(client_socket, body, strlen(body), 0);
     if (sent == -1)
         wlog(ERROR, "Failed to send %s error body.", code);
-    wlog(INFO, "%d bytes sent.", sent);
+    wlog(TRACE, "%d bytes sent.", sent);
 
     return EXIT_SUCCESS;
 }
