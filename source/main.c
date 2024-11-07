@@ -7,7 +7,6 @@
 
 #include <stdlib.h>
 
-// TODO fix all logging calls and make them make sense and fit a standard
 int main(int argc, char const* argv[])
 {
     if (config_server(argc, argv))
@@ -21,6 +20,3 @@ int main(int argc, char const* argv[])
 
     return server_shutdown();
 }
-
-// NOTE we could use static char buffers instead of buffer pointers and lengths
-// It would be safe since we use child processes instead of concurrency

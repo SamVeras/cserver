@@ -334,7 +334,7 @@ int server_client_handler(int client_socket)
     }
 
     buff[rec_bytes] = '\0';
-    char rec_str[32];  // TODO why is this not an array? a pointer? what?
+    char rec_str[32];
     human_readable_size(rec_bytes, rec_str, sizeof rec_str);
     wlog(INFO, "Received %s.", rec_str);
 

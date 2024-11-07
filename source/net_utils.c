@@ -17,8 +17,6 @@ static time_t clt;
  * localtime() function with the clt variable. */
 static struct tm* ct;
 
-// TODO add data samples to data folder
-
 /* -------------------------------------------------------------------------- */
 
 const char* get_mime_type(const char path[])

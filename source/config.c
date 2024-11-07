@@ -161,7 +161,7 @@ int config_server(int argc, char const* argv[])
 
     if (MAX_CLIENTS < 1)
     {
-        fprintf(stderr, "Max clients must be a positive retard\n");
+        fprintf(stderr, "Max clients must be a positive number.\n");
         return EXIT_FAILURE;
     }
 
