@@ -1,0 +1,39 @@
+# yaml-language-server: $schema=https://taskfile.dev/schema.json
+version: "3"
+
+vars:
+    CC: "gcc"
+    CFLAGS: "-O3 -fsanitize=address,undefined -Wall -Werror -Wextra"
+    INCLUDE_DIR: "include"
+    SOURCE_DIR: "source"
+    BUILD_DIR: "build"
+    TARGET: "server"
+
+tasks:
+    default:
+        - task: build
+
+    build:
+        desc: "Compile the server executable, linking object files."
+        deps: [objects]
+        cmds:
+            - "{{.CC}} {{.CFLAGS}} -o {{.TARGET}} $(find {{.BUILD_DIR}} -name '*.o')"
+        generates:
+            - "{{.TARGET}}"
+        sources:
+            - "{{.SOURCE_DIR}}/*.o"
+
+    objects:
+        desc: "Compile source files into object files."
+        dir: "{{.BUILD_DIR}}"
+        cmds:
+            - "{{.CC}} {{.CFLAGS}} -I../{{.INCLUDE_DIR}} -c ../{{.SOURCE_DIR}}/*.c"
+        sources:
+            - "../{{.SOURCE_DIR}}/*.c"
+        generates:
+            - "*.o"
+
+    clean:
+        desc: "Clean build folder of all object files."
+        cmds:
+            - "rm {{.BUILD_DIR}}/*.o"

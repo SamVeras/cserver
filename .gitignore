@@ -52,6 +52,7 @@ Mkfile.old
 dkms.conf
 
 .vscode/
+.task/
 test/
 server
 *.log
