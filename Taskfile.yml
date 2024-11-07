@@ -21,7 +21,7 @@ tasks:
         generates:
             - "{{.TARGET}}"
         sources:
-            - "{{.SOURCE_DIR}}/*.o"
+            - "{{.BUILD_DIR}}/*.o"
 
     objects:
         desc: "Compile source files into object files."
@@ -30,6 +30,7 @@ tasks:
             - "{{.CC}} {{.CFLAGS}} -I../{{.INCLUDE_DIR}} -c ../{{.SOURCE_DIR}}/*.c"
         sources:
             - "../{{.SOURCE_DIR}}/*.c"
+            - "../{{.INCLUDE_DIR}}/*.h"
         generates:
             - "*.o"
 
@@ -41,6 +42,7 @@ tasks:
             - "{{.SOURCE_DIR}}/*.c"
             - "{{.INCLUDE_DIR}}/*.h"
             - "Doxyfile"
+        method: timestamp
 
     showdocs:
         desc: "Generate and open the Doxygen documentation."
