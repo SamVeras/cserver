@@ -15,8 +15,6 @@ void sigh(int signal)
     return;
 }
 
-// TODO Fit return into standard success / failure
-
 int sigh_startup()
 {
     wlog(INFO, "Setting up signal handling...");

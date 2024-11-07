@@ -13,7 +13,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <poll.h>
-
+#include <arpa/inet.h>
 /* -------------------------------------------------------------------------- */
 
 /**
@@ -37,7 +37,7 @@ static int ssfd = 0;
  * @brief Client socket.
  * File descriptor of the client socket. */
 static int csfd = 0;
-
+// TODO Why am I using a global csfd if I pass the client socket to functions?
 /**
  * @brief Server address info.
  * Linked list with >= 1 results from the getaddrinfo() function. */
@@ -246,6 +246,40 @@ int server_run()
             }
 
             wlog(INFO, "Request accepted. Connected to socket.");
+
+            char        ipstr[INET6_ADDRSTRLEN];
+            int         port     = 0;
+            const char* inet_err = NULL;
+
+            if (csa.ss_family == AF_INET)
+            {
+                struct sockaddr_in* sin = (struct sockaddr_in*) &csa;
+                port                    = ntohs(sin->sin_port);
+                inet_err = inet_ntop(csa.ss_family, &sin->sin_addr, ipstr, sizeof ipstr);
+            }
+            else if (csa.ss_family == AF_INET6)
+            {
+                struct sockaddr_in6* sin = (struct sockaddr_in6*) &csa;
+                port                     = ntohs(sin->sin6_port);
+                inet_err = inet_ntop(csa.ss_family, &sin->sin6_addr, ipstr, sizeof ipstr);
+            }
+
+            if (inet_err == NULL)
+            {
+                wlog(ERROR, "Failed to determine peer's IP address.");
+                close(csfd);
+                continue;
+            }
+
+            if (port == 0)
+            {
+                wlog(ERROR, "Failed to determine peer's port number.");
+                close(csfd);
+                continue;
+            }
+
+            wlog(INFO, "Accepted connection from %s:%d", ipstr, port);
+
             wlog(TRACE, "Forking...");
 
             // Fork to handle client in a separate process
@@ -391,6 +425,11 @@ int handle_user_request(int client_socket, char* req)
 
     wlog(DEBUG, "Changed path to \"%s\".", path);
 
+    if (strcmp(path, "data/index.html") == 0)
+    {
+        return serve_data_tree(client_socket);
+    }
+
     return send_file(client_socket, path);
 }
 
@@ -481,4 +520,29 @@ int send_error_page(int client_socket, const char* code, const char* title, cons
     wlog(TRACE, "%d bytes sent.", sent);
 
     return EXIT_SUCCESS;
+}
+
+/* -------------------------------------------------------------------------- */
+
+int serve_data_tree(int client_socket)
+{
+    char command[80];
+    // Use tree for now, until/if we make our own tree view
+    snprintf(command,
+             sizeof(command),
+             "cd data && tree -H . --noreport --charset utf-8 . > %s",
+             landing);
+
+    if (system(command) != 0)
+    {
+        wlog(ERROR, "Failed to execute tree command in data/%s.", landing);
+        send_error_page(client_socket,
+                        "500 Internal Server Error",
+                        "Internal Server Error",
+                        "Failed to execute tree command.");
+        return EXIT_FAILURE;
+    }
+    char path[16];
+    snprintf(path, 16, "data/%s", landing);
+    return send_file(client_socket, path);
 }

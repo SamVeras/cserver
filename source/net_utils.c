@@ -139,7 +139,6 @@ void format_log_message(char str[], size_t str_len)
     // Check if message has newline
     char* new_line_pos = strchr(str, '\n');
 
-    // TODO maybe dont truncate at first newline? replace them with whitespace?
     // Truncate at first newline
     if (new_line_pos)
     {

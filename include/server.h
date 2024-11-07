@@ -83,3 +83,11 @@ int send_error_page(int client_socket, const char* code, const char* title, cons
  * @return 0 on success, -1 on failure.
  */
 int server_client_handler(int client_socket);
+
+/**
+ * @brief Serves a directory listing as a web page to the client.
+ * This function utilizes the 'tree' command to generate a directory listing
+ * of the 'data' directory to a .HTML file and then send it to the client.
+ * @param client_socket The socket associated with the client.
+ * @return EXIT_SUCCESS on successfully sending the directory listing, EXIT_FAILURE on error.*/
+int serve_data_tree(int client_socket);
