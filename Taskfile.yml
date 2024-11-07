@@ -33,6 +33,14 @@ tasks:
         generates:
             - "*.o"
 
+    docs:
+        desc: "Generate doxygen documentation."
+        cmds:
+            - doxygen
+        sources:
+            - "{{.SOURCE_DIR}}/*.c"
+            - "{{.INCLUDE_DIR}}/*.h"
+
     clean:
         desc: "Clean build folder of all object files."
         cmds:
