@@ -37,7 +37,6 @@ static int ssfd = 0;
  * @brief Client socket.
  * File descriptor of the client socket. */
 static int csfd = 0;
-// TODO Why am I using a global csfd if I pass the client socket to functions?
 /**
  * @brief Server address info.
  * Linked list with >= 1 results from the getaddrinfo() function. */
@@ -399,7 +398,7 @@ int handle_user_request(int client_socket, char* req)
     {
         wlog(WARNING, "Path traversal attempt detected: %s.", path);
         wlog(INFO, "Attempting to send 403 Forbidden page to user...");
-        send_error_page(csfd, "403 Forbidden", "FORBIDDEN", "GET OUT &#x1F5E3;");
+        send_error_page(client_socket, "403 Forbidden", "FORBIDDEN", "GET OUT &#x1F5E3;");
         return EXIT_FAILURE;
     }
 

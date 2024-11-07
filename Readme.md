@@ -8,24 +8,30 @@ designed to help me understand the basics of networking and socket programming.
 
 ## Setup
 
-1. Clone the repository:
+1. **Clone the repository**:
 
    - HTTPS `https://github.com/SamVeras/cserver.git`
    - SSH `git@github.com:SamVeras/cserver.git`.
 
-2. Install [Task](https://taskfile.dev/) (if not already installed).
+2. **Install [Task](https://taskfile.dev/)** (if not already installed).
 
-3. Install [Doxygen](https://www.doxygen.nl) (optional, but required to build
+3. **Install [Doxygen](https://www.doxygen.nl)** (optional, but required to build
    docs).
 
-4. Run `task build` to compile the server executable.
+4. **Install tree** (optional but required if you want to generate the index directory structure):
 
-5. Run `task docs` to build the Doxygen documentation.
+   - It should be available on most, if not all, Linux distributions.
+   - For example, on Debian-based systems, you can install it with: `sudo apt install tree`
+   - If tree is missing, the index folder directory generation will fail.
 
-6. Quick start: `server --port 8080`.
+5. **Build server**: Run `task build` to compile the server executable.
 
-The server will only serve files from the `/data` folder, which serves as the
-server's document root.
+6. **Build documentation**: Run `task docs` to build the Doxygen documentation.
+
+7. **Quick start**: `server --port 8080`.
+
+The server will only serve files from the `/data` folder, which is server's
+document root.
 
 ## Tasks
 
