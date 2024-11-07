@@ -4,35 +4,92 @@
 
 #pragma once
 
+/** @brief The current status of the server. */
 typedef enum ServerStatusEnum
 {
-    SST_OUTOFORDERCALL = -3,  // User attempted to start up server while it's running.
-    SST_NONINITFAILURE = -2,  // User attempted to run server before initializing it.
-    SST_FAILURE        = -1,  // Error encountered during server initialization.
-    SST_UNINITIALIZED  = 0,   // Server start has not been called yet.
-    SST_RUNNING        = 1    // Server is currently running.
+    /** @brief The user attempted to start up server while it's running. **/
+    SST_OUTOFORDERCALL = -3,
+    /** @brief The user attempted to run server before initializing it. */
+    SST_NONINITFAILURE = -2,
+    /** @brief Error encountered during server initialization. */
+    SST_FAILURE = -1,
+    /** @brief Server start has not been initialized yet. */
+    SST_UNINITIALIZED = 0,
+    /** @brief Server is currently running. */
+    SST_RUNNING = 1
 } ServerStatus;
 
-/* -------------------------------------------------------------------------- */
-// All functions return EXIT_SUCCESS or EXIT_FAILURE if an error occurs.
+/* -- All functions return EXIT_SUCCESS or EXIT_FAILURE if an error occurs. - */
 
-// Initializes the server, sets up socket, signal handling, and binds to port.
+/**
+ * @brief Initialize the server.
+ *
+ * This function sets up the server by initializing logging,
+ * setting up signal handling, getting the local address info,
+ * creating the server socket, setting options, binding the
+ * socket, and marking it as passive.
+ *
+ * @return 0 on success, -1 on failure.
+ */
 int server_start();
 
-// Runs main loop, accepts and handles client requests until a shutdown request.
+/**
+ * @brief Runs the server's main loop, accepting and handling client requests.
+ *
+ * This function monitors incoming connections using poll and forks a child
+ * process to handle each client request. It continues running until a shutdown
+ * is requested.
+ *
+ * @return EXIT_SUCCESS on successful shutdown, EXIT_FAILURE on error.
+ */
 int server_run();
 
-// Shuts down the server, closes sockets and cleans up resources.
+/**
+ * @brief Shutdown the server.
+ * Shuts down the server by closing the server and client sockets and
+ * freeing the address info.
+ * @return EXIT_SUCCESS on successful shutdown, EXIT_FAILURE on error.
+ */
 int server_shutdown();
 
-// Handles client request, parses HTTP method and path.
+/**
+ * @brief Handles an HTTP request from a client.
+ *
+ * This function parses the HTTP request to extract the method and path,
+ * logs the request details, checks for path traversal attempts, and
+ * serves the requested file or sends an error page if necessary.
+ *
+ * @param client_socket The socket associated with the client.
+ * @param req The HTTP request received from the client.
+ * @return EXIT_SUCCESS on successful file serving, EXIT_FAILURE on error.
+ */
 int handle_user_request(int client_socket, char* req);
 
-// Constructs headers and sends the requested file to the client in chunks.
+/**
+ * @brief Sends a file to a client.
+ *
+ * @param client_socket The socket where the file should be sent.
+ * @param path The path to the file to be sent.
+ *
+ * @return 0 on success, -1 on failure.
+ */
 int send_file(int client_socket, const char path[]);
 
-// Send formatted error page to user.
+/**
+ * @brief Send an error page to the user.
+ *
+ * @param client_socket The socket where the error page should be sent.
+ * @param code The HTTP status code for the error.
+ * @param title The title of the error page.
+ * @param message The message to be displayed on the error page.
+ *
+ * @return EXIT_SUCCESS on success, EXIT_FAILURE on failure.
+ */
 int send_error_page(int client_socket, const char* code, const char* title, const char* message);
 
-// Handle specific clients in forks.
+/**
+ * @brief Handle a single client request.
+ * @param[in] client_socket File descriptor of the socket to read from.
+ * @return 0 on success, -1 on failure.
+ */
 int server_client_handler(int client_socket);

@@ -14,13 +14,46 @@
 #include <unistd.h>
 #include <poll.h>
 
-static ServerStatus            sst  = SST_UNINITIALIZED;
-static int                     err  = 0;
-static int                     ssfd = 0;  // Server socket / file descriptor
-static int                     csfd = 0;  // Client socket / file descriptor
-static struct addrinfo*        sai;  // Server address info, gives a linked list with >= 1 results
-static struct sockaddr_storage csa;  // Client socket address, can be casted to sockaddr
-static socklen_t               csa_size = sizeof csa;  // Client sock address length
+/* -------------------------------------------------------------------------- */
+
+/**
+ * @brief The current status of the server.
+ * Tracks the server's current state to ensure proper operation.  It prevents
+ * the server from being started if it is already running, and prevents shutdown
+ * attempts if the server has not been initialized. */
+static ServerStatus sst = SST_UNINITIALIZED;
+
+/**
+ * @brief Global error code.
+ * Stores the last error code when a function returns an error. */
+static int err = 0;
+
+/**
+ * @brief Server socket.
+ * File descriptor of the server socket. */
+static int ssfd = 0;
+
+/**
+ * @brief Client socket.
+ * File descriptor of the client socket. */
+static int csfd = 0;
+
+/**
+ * @brief Server address info.
+ * Linked list with >= 1 results from the getaddrinfo() function. */
+static struct addrinfo* sai;
+
+/**
+ * @brief Client socket address.
+ * Client socket address, which can be casted to a sockaddr struct. */
+static struct sockaddr_storage csa;
+
+/**
+ * @brief Client socket address length.
+ * Length of the client socket address. */
+static socklen_t csa_size = sizeof csa;
+
+/* -------------------------------------------------------------------------- */
 
 int server_start()
 {
@@ -136,6 +169,8 @@ int server_start()
     return EXIT_SUCCESS;
 }
 
+/* -------------------------------------------------------------------------- */
+
 int server_run()
 {
     if (sst == SST_UNINITIALIZED)
@@ -201,7 +236,8 @@ int server_run()
             wlog(INFO, "Request accepted. Connected to socket.");
             wlog(TRACE, "Forking...");
 
-            // Fork returns PID of child process to parent, but returns 0 to the child itself.
+            // Fork to handle client in a separate process
+            // fork() returns PID of child process to parent and 0 to the child itself.
             pid_t pid = fork();
 
             if (pid == -1)
@@ -211,9 +247,9 @@ int server_run()
                 continue;
             }
 
-            if (pid == 0)         // We are a Child
+            if (pid == 0)         // We are in a child process
             {
-                if (close(ssfd))  // Listening is unnecesary
+                if (close(ssfd))  // Close unused server socket
                     wlog(WARNING, "[%d] Failed to close server socket.", getpid());
 
                 if (server_client_handler(csfd))
@@ -225,8 +261,7 @@ int server_run()
                 exit(EXIT_SUCCESS);  // Kill child
             }
 
-            // else...
-            close(csfd);  // Close because only the child needs this
+            close(csfd);  // Parent process closes the client socket
         }
 
         if (shut_req)
@@ -239,6 +274,8 @@ int server_run()
     wlog(INFO, "Server no longer running.");
     return EXIT_SUCCESS;
 }
+
+/* -------------------------------------------------------------------------- */
 
 int server_client_handler(int client_socket)
 {
@@ -265,6 +302,8 @@ int server_client_handler(int client_socket)
     return EXIT_SUCCESS;
     // Client socked is closed in server_run() after forking.
 }
+
+/* -------------------------------------------------------------------------- */
 
 int server_shutdown()
 {
@@ -300,6 +339,8 @@ int server_shutdown()
     return EXIT_SUCCESS;
 }
 
+/* -------------------------------------------------------------------------- */
+
 int handle_user_request(int client_socket, char* req)
 {
     // ex.: GET /index.html -> method = "GET", path = "/index.html"
@@ -333,6 +374,8 @@ int handle_user_request(int client_socket, char* req)
 
     return send_file(client_socket, path);
 }
+
+/* -------------------------------------------------------------------------- */
 
 int send_file(int client_socket, const char path[])
 {
@@ -393,13 +436,17 @@ int send_file(int client_socket, const char path[])
     return EXIT_SUCCESS;
 }
 
+/* -------------------------------------------------------------------------- */
+
 int send_error_page(int client_socket, const char* code, const char* title, const char* message)
 {
     char    header[512], body[512];
     ssize_t sent;
 
+    // Build the error page body
     snprintf(body, sizeof(body), "<html><body><h1>%s</h1><p>%s</p></body></html>", title, message);
 
+    // Build the error page header
     build_html_header(header, sizeof(header), code, "text/html", strlen(body));
 
     wlog(INFO, "Sending error %s header to user...", code);

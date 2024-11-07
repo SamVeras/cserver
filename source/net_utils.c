@@ -3,10 +3,24 @@
 #include "config.h"
 #include <string.h>
 
-static time_t     clt;  // Current local time
-static struct tm* ct;   // Current time structure (broken-down)
+/* -------------------------------------------------------------------------- */
+
+/**
+ * @brief Current local time.
+ * This variable is used to store the current local time, retrieved using the
+ * time() function, as seconds since Epoch (Jan 1st, 1970 00:00 UTC). */
+static time_t clt;
+
+/**
+ * @brief Current time structure.
+ * Store the broken-down current time structure which is retrieved using the
+ * localtime() function with the clt variable. */
+static struct tm* ct;
 
 // TODO add data samples to data folder
+
+/* -------------------------------------------------------------------------- */
+
 const char* get_mime_type(const char path[])
 {
     wlog(TRACE, "Getting mime-type of path %s...", path);
@@ -56,6 +70,8 @@ const char* get_mime_type(const char path[])
     return "application/octet-stream";  // Default for unknown types
 }
 
+/* -------------------------------------------------------------------------- */
+
 void build_html_header(char*       header,
                        size_t      header_size,
                        const char* status,
@@ -75,6 +91,8 @@ void build_html_header(char*       header,
              content_length);
 }
 
+/* -------------------------------------------------------------------------- */
+
 void center_text(const char* text, char* buff, size_t len)
 {
     if (strlen(text) >= len)
@@ -89,11 +107,17 @@ void center_text(const char* text, char* buff, size_t len)
     return;
 }
 
+/* -------------------------------------------------------------------------- */
+
 void get_current_time(char buffer[], size_t buff_size)
 {
     if (buff_size < 20)
+    {
+        wlog(ERROR, "Buffer size %zu is too small for current time string.", buff_size);
         return;
+    }
 
+    // Get current time and convert it to a tm struct
     clt = time(NULL);
     ct  = localtime(&clt);
 
@@ -107,6 +131,8 @@ void get_current_time(char buffer[], size_t buff_size)
              ct->tm_min,
              ct->tm_sec);
 }
+
+/* -------------------------------------------------------------------------- */
 
 void format_log_message(char str[], size_t str_len)
 {
@@ -131,6 +157,8 @@ void format_log_message(char str[], size_t str_len)
     return;
 }
 
+/* -------------------------------------------------------------------------- */
+
 void human_readable_size(long bytes, char buffer[], size_t buff_len)
 {
     const char* units[] = {"B", "KB", "MB", "GB", "TB"};
@@ -147,6 +175,8 @@ void human_readable_size(long bytes, char buffer[], size_t buff_len)
 
     return;
 }
+
+/* -------------------------------------------------------------------------- */
 
 void log_transfer_data(long read, long sent, long unsigned transfers)
 {

@@ -40,6 +40,13 @@ tasks:
         sources:
             - "{{.SOURCE_DIR}}/*.c"
             - "{{.INCLUDE_DIR}}/*.h"
+            - "Doxyfile"
+
+    showdocs:
+        desc: "Generate and open the Doxygen documentation."
+        deps: [docs]
+        cmds:
+            - xdg-open docs/html/index.html
 
     clean:
         desc: "Clean build folder of all object files."

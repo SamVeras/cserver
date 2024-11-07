@@ -5,12 +5,16 @@
 #include <errno.h>
 #include <string.h>
 
+/* -------------------------------------------------------------------------- */
+
 int      BUFFER_SIZE   = -1;
 int      BACKLOG       = -1;
 LogLevel LOG_LEVEL     = -1;
 int      SERVER_PORT   = -1;
 int      MAX_CLIENTS   = -1;
 char*    LOG_FILE_NAME = "";
+
+/* -------------------------------------------------------------------------- */
 
 int parse_arg(const char* arg, const char* value, int* target)
 {
@@ -31,6 +35,8 @@ int parse_arg(const char* arg, const char* value, int* target)
 
     return EXIT_SUCCESS;
 }
+
+/* -------------------------------------------------------------------------- */
 
 int config_server(int argc, char const* argv[])
 {
@@ -118,7 +124,7 @@ int config_server(int argc, char const* argv[])
         }
     }
 
-    // Check validity of user args
+    /* --------------------- Check validity of user args -------------------- */
 
     if (BUFFER_SIZE <= 0)
     {
@@ -173,6 +179,8 @@ int config_server(int argc, char const* argv[])
     return EXIT_SUCCESS;
 }
 
+/* -------------------------------------------------------------------------- */
+
 void server_config_show()
 {
     fprintf(stderr,
@@ -184,6 +192,8 @@ void server_config_show()
             LOG_FILE_NAME);
     return;
 }
+
+/* -------------------------------------------------------------------------- */
 
 void config_help()
 {

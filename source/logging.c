@@ -10,16 +10,30 @@
 
 /* -------------------------------------------------------------------------- */
 
+/** @brief Log strings for log levels.*/
 static const char* log_strings[6] = {
     "[TRACE]", "[DEBUG]", "[INFO]", "[WARN]", "[ERROR]", "[FATAL]"};
-static FILE*     lfs;  // Local file stream
+
+/**
+ * @brief Local file stream where log messages are written.
+ * This is the file stream that is opened when wlog_startup() is called.
+ * It is used to store log messages in a file.
+ */
+static FILE* lfs;
+
+/**
+ * @brief Log status.
+ * This variable stores the current status of the logging system.
+ * It is used to prevent the logging system from being used before it is
+ * initialized, and to prevent it from being initialized multiple times.
+ */
 static LogStatus ls = LS_UNINITIALIZED;
 
 /* -------------------------------------------------------------------------- */
 
 int wlog_startup()
 {
-    if (ls == LS_NONINITFAILURE)
+    if (ls == LS_NONINITFAILURE)  // Ensure that logging is not already set up
     {
         wlog(ERROR, "Out of order logging initialization. Start up before use.");
         return EXIT_FAILURE;
@@ -94,7 +108,7 @@ int wlog(LogLevel lvl, char message[], ...)
     // center_text(log_strings[lvl], ll, sizeof ll - 1);
     const char* ll = log_strings[lvl];
 
-    /* ------------------------------------------------------------------------------------------ */
+    /* ---------------------------------------------------------------------- */
 
     fprintf(stderr, "%s %s %s", log_time, ll, log_message);
 
@@ -110,7 +124,7 @@ int wlog(LogLevel lvl, char message[], ...)
         return EXIT_FAILURE;
     }
 
-    /* ------------------------------------------------------------------------------------------ */
+    /* ---------------------------------------------------------------------- */
 
     fprintf(lfs, "%s %s %s", log_time, ll, log_message);
     fflush(lfs);

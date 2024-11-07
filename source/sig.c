@@ -10,12 +10,13 @@ void sigh(int signal)
 {
     wlog(INFO, "Shutdown requested after receiving signal %d.", signal);
     shut_req = 1;
-    // __sync_synchronize();
+
     wlog(TRACE, "Shutdown_request is now %d", shut_req);
-    // return;
+    return;
 }
 
 // TODO Fit return into standard success / failure
+
 int sigh_startup()
 {
     wlog(INFO, "Setting up signal handling...");
