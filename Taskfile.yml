@@ -7,6 +7,7 @@ vars:
     INCLUDE_DIR: "include"
     SOURCE_DIR: "source"
     BUILD_DIR: "build"
+    DOCS_DIR: "docs"
     TARGET: "server"
 
 tasks:
@@ -41,6 +42,7 @@ tasks:
         sources:
             - "{{.SOURCE_DIR}}/*.c"
             - "{{.INCLUDE_DIR}}/*.h"
+            - "{{.DOCS_DIR}}/*.{md, txt, dox}"
             - "Doxyfile"
         method: timestamp
 
