@@ -24,6 +24,9 @@ designed to help me understand the basics of networking and socket programming.
 
 6. Quick start: `server --port 8080`.
 
+The server will only serve files from the `/data` folder, which serves as the
+server's document root.
+
 ## Tasks
 
 This project uses [Task](https://taskfile.dev/) to define tasks which can be run
