@@ -5,8 +5,11 @@
 #pragma once
 #include "logging.h"
 
+/** @brief Convert a macro argument to a string literal. */
 #define _STR(X) #X
-#define STR(X)  _STR(X)
+
+/** @brief Expand a macro argument and convert to a string literal. */
+#define STR(X) _STR(X)
 
 /** @brief Buffer size for network communication. */
 extern int BUFFER_SIZE;
