@@ -2,6 +2,8 @@
 #include "logging.h"
 #include "config.h"
 #include <string.h>
+#include <stdlib.h>
+#include <ctype.h>
 
 /* -------------------------------------------------------------------------- */
 
@@ -183,4 +185,49 @@ void log_transfer_data(long read, long sent, long unsigned transfers)
     wlog(INFO, "%lu transfers done. %s sent. Total read: %s.", transfers, sent_str, read_str);
 
     return;
+}
+
+/* -------------------------------------------------------------------------- */
+
+int url_decode(char* dest, size_t dest_size, const char* src, size_t src_size)
+{
+    if (dest == NULL || src == NULL || dest_size == 0 || src_size == 0)
+        return EXIT_FAILURE;
+
+    size_t d = 0, s = 0;
+
+    // Iterate over the source string
+    while (s < src_size)
+    {
+        // Handle percent-encoded characters
+        if (src[s] == '%' && s + 2 < src_size && isxdigit(src[s + 1]) && isxdigit(src[s + 2]))
+        {
+            char hex[3];
+            hex[0] = src[s + 1];
+            hex[1] = src[s + 2];
+            hex[2] = '\0';
+
+            // Convert hex to character and store in destination
+            dest[d++] = (char) strtol(hex, NULL, 16);
+            s += 3;
+            continue;
+        }
+
+        // Handle regular characters
+        if (d >= dest_size - 1)
+        {
+            dest[d] = '\0';
+            return EXIT_FAILURE;
+        }
+
+        dest[d++] = src[s++];
+    }
+
+    // Null-terminate the destination string
+    if (d < dest_size)
+        dest[d] = '\0';
+    else
+        dest[dest_size - 1] = '\0';
+
+    return EXIT_SUCCESS;
 }

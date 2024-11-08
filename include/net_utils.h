@@ -79,3 +79,14 @@ void human_readable_size(long bytes, char buffer[], size_t buff_len);
  * sent, as well as the number of transfers done. It also logs the transfer data
  * in a human-readable format. */
 void log_transfer_data(long read, long sent, long unsigned transfers);
+
+/**
+ * @brief Decodes a URL-encoded string.
+ * This function decodes a URL-encoded input string `src` and stores the result
+ * in `dest`. It handles percent-encoded characters and regular characters.
+ * @param dest The destination buffer to store the decoded string.
+ * @param dest_size The size of the destination buffer.
+ * @param src The source URL-encoded string.
+ * @param src_size The size of the source string.
+ * @return EXIT_SUCCESS on successful decoding, EXIT_FAILURE if an error occurs. */
+int url_decode(char* dest, size_t dest_size, const char* src, size_t src_size);

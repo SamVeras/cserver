@@ -394,6 +394,13 @@ int handle_user_request(int client_socket, char* req)
 
     wlog(INFO, "Request with method \"%s\" and path \"%s\"...", method, path);
 
+    // We need to decode the URL
+    // We don't need to store the decoded path in another string since the decoded output is
+    // guaranteed to be exactly the same length as the original path, or less, so we can overwrite
+    // the original path.
+
+    url_decode(path, sizeof path, path, sizeof path);
+
     if (strstr(path, "..") || strstr(path, "//"))
     {
         wlog(WARNING, "Path traversal attempt detected: %s.", path);
