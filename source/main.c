@@ -7,6 +7,10 @@
 
 #include <stdlib.h>
 
+// TODO use magic numbers to determine mime type
+// TODO make my own tree implementation or include one
+// TODO optimize snprintf calls by storing actual paths
+// TODO remove necessity of having a favicon file if none is found (maybe have a default one?)
 int main(int argc, char const* argv[])
 {
     if (config_server(argc, argv))

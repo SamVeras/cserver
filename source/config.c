@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <errno.h>
 #include <string.h>
+#include <unistd.h>
 
 /* -------------------------------------------------------------------------- */
 
@@ -13,6 +14,8 @@ LogLevel LOG_LEVEL     = -1;
 int      SERVER_PORT   = -1;
 int      MAX_CLIENTS   = -1;
 char*    LOG_FILE_NAME = "";
+char*    ROOT_DIR      = "";
+char*    FAVICON_FILE  = "";
 
 /* -------------------------------------------------------------------------- */
 
@@ -54,6 +57,8 @@ int config_server(int argc, char const* argv[])
     BACKLOG           = 5;     // Connection queue size
     MAX_CLIENTS       = 10;
     LOG_FILE_NAME     = "server.log";
+    ROOT_DIR          = "data";
+    FAVICON_FILE      = "favicon.png";
 
     if (argc == 1)
     {
@@ -69,9 +74,9 @@ int config_server(int argc, char const* argv[])
             fprintf(stderr, "Expected value after %s.\n", argv[i]);
             return EXIT_FAILURE;
         }
-
+        // ( ¬A or ¬B ) === ¬( A and B )
         if ((strcmp("-p", argv[i]) && strcmp("--port", argv[i])) == 0)
-        {  // ( ¬A or ¬B ) === ¬( A and B )
+        {
             i++;
             if (parse_arg(argv[i - 1], argv[i], &SERVER_PORT))
             {
@@ -102,7 +107,6 @@ int config_server(int argc, char const* argv[])
                 return EXIT_FAILURE;
             }
         }
-
         else if ((strcmp(argv[1], "-m") && strcmp(argv[1], "--max-clients")) == 0)
         {
             i++;
@@ -111,12 +115,18 @@ int config_server(int argc, char const* argv[])
                 return EXIT_FAILURE;
             }
         }
-
+        else if ((strcmp("-i", argv[i]) && strcmp("--favicon", argv[i])) == 0)
+        {
+            FAVICON_FILE = strdup(argv[++i]);
+        }
+        else if ((strcmp("-r", argv[i]) && strcmp("--root", argv[i])) == 0)
+        {
+            ROOT_DIR = strdup(argv[++i]);
+        }
         else if ((strcmp("-f", argv[i]) && strcmp("--log-file", argv[i])) == 0)
         {
             LOG_FILE_NAME = strdup(argv[++i]);
         }
-
         else
         {
             fprintf(stderr, "Unknown option: %s.\n", argv[i]);
@@ -168,6 +178,32 @@ int config_server(int argc, char const* argv[])
     if (strcmp(LOG_FILE_NAME, "") == 0)
     {
         fprintf(stderr, "Log file name cannot be empty.\n");
+        return EXIT_FAILURE;
+    }
+
+    if (strcmp(FAVICON_FILE, "") == 0)
+    {
+        fprintf(stderr, "Favicon file name cannot be empty.\n");
+        return EXIT_FAILURE;
+    }
+
+    char favicon_path[256];
+    snprintf(favicon_path, sizeof(favicon_path), "%s/%s", ROOT_DIR, FAVICON_FILE);
+    if (access(favicon_path, F_OK) != 0)  // Check if favicon file is valid and exists
+    {
+        fprintf(stderr, "Favicon file does not exist (%s).\n", favicon_path);
+        return EXIT_FAILURE;
+    }
+
+    if (strcmp(ROOT_DIR, "") == 0)
+    {
+        fprintf(stderr, "Root directory cannot be empty.\n");
+        return EXIT_FAILURE;
+    }
+
+    if (access(ROOT_DIR, F_OK) != 0)
+    {
+        fprintf(stderr, "Root directory does not exist.\n");
         return EXIT_FAILURE;
     }
 
@@ -226,9 +262,20 @@ void config_help()
             "If specified, file name must not be empty. "
             "Defaults to server.log.\n"
 
+            "-r, --root ROOTDIR\t\t"
+            "Set the root directory for serving files. "
+            "Defaults to 'data'.\n"
+
+            "-i, --favicon FAVICONFILE\t"
+            "Set the name of the favicon file. "
+            "Defaults to 'favicon32.png'.\n"
+            "Must be a valid file in the root directory.\n"
+
             "-m, --max-clients MAXCLIENTS\t"
             "Maximum number of client connections the server can handle simultaneously."
             "Must be a positive, non-zero value."
             "Currently unused! /shrug."
-            "Defaults to 10.");
+            "Defaults to 10.\n"
+
+    );
 }

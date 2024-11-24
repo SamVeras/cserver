@@ -231,3 +231,63 @@ int url_decode(char* dest, size_t dest_size, const char* src, size_t src_size)
 
     return EXIT_SUCCESS;
 }
+
+/* -------------------------------------------------------------------------- */
+
+// Inútil.
+
+// int parse_ip_port_arg(const char* arg, char* ip, size_t ip_size, char* port, size_t port_size)
+// {
+//     const char* separator = strchr(arg, ':');  // Get the : separator position
+//     if (!separator)                            // There is no separator
+//     {
+//         fprintf(stderr, "Expected proxy argument to be in format IP:PORT (%s).\n", arg);
+//         return EXIT_FAILURE;
+//     }
+//
+//     // Check IP length
+//     size_t ip_len = separator - arg;
+//     if (ip_len > ip_size)
+//     {
+//         // Subtracting separator position from arg position gives length
+//         fprintf(stderr, "IP too long! (%s).\n", arg);
+//         return EXIT_FAILURE;
+//     }
+//
+//     strncpy(ip, arg, ip_len);  // Copy IP to provided IP buffer
+//     ip[ip_len] = '\0';         // Add null terminator
+//
+//     // Check port length
+//     if (strlen(separator + 1) > port_size)
+//     {
+//         fprintf(stderr, "PORT too long! (%s).\n", arg);
+//         return EXIT_FAILURE;
+//     }
+//
+//     strncpy(port, separator + 1, port_size);  // Copy PORT to provided port buffer
+//     port[strlen(separator + 1)] = '\0';       // Should already be null terminated but just in
+//     case
+//
+//     // Now we need to validate IP and PORT
+//     if (inet_pton(AF_INET, ip, NULL) <= 0)
+//     {
+//         fprintf(stderr, "Invalid IP! (%s).\n", arg);
+//         return EXIT_FAILURE;
+//     }
+//
+//     errno        = 0;
+//     int port_int = strtol(port, NULL, 10);  // Check if PORT is really numeric
+//     if (errno != 0)
+//     {
+//         fprintf(stderr, "Invalid PORT! (%s) errno: %d %s.\n", arg, errno, strerror(errno));
+//         return EXIT_FAILURE;
+//     }
+//
+//     if (port_int < 0 || port_int > 65535)  // Check if PORT is within valid bounds
+//     {
+//         fprintf(stderr, "Port out of bounds! (%s).\n", arg);
+//         return EXIT_FAILURE;
+//     }
+//
+//     return EXIT_SUCCESS;
+// }

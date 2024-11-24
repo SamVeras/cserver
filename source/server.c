@@ -53,12 +53,6 @@ static struct sockaddr_storage csa;
 static socklen_t csa_size = sizeof csa;
 
 /**
- * @brief Favicon file name.
- * Name of the favicon file to be served when receiving a request for
- * /favicon.ico. */
-static const char* favicon = "favicon32.png";
-
-/**
  * @brief Landing page file name.
  * Name of the landing page file to be served when the user requests
  * the root directory. */
@@ -122,7 +116,7 @@ int server_start()
     wlog(DEBUG, "Server socket created.");
 
     wlog(INFO, "Setting socket option %d (SO_REUSEADDR)...", SO_REUSEADDR);
-    err = setsockopt(ssfd, SOL_SOCKET, SO_REUSEADDR, &(int){1}, sizeof(int));
+    err = setsockopt(ssfd, SOL_SOCKET, SO_REUSEADDR, &(int) {1}, sizeof(int));
 
     if (err == -1)
         wlog(ERROR, "Failed to set socket option. %d %s.", errno, strerror(errno));
@@ -250,13 +244,13 @@ int server_run()
             int         port     = 0;
             const char* inet_err = NULL;
 
-            if (csa.ss_family == AF_INET)
+            if (csa.ss_family == AF_INET)  // IPv4
             {
                 struct sockaddr_in* sin = (struct sockaddr_in*) &csa;
                 port                    = ntohs(sin->sin_port);
                 inet_err = inet_ntop(csa.ss_family, &sin->sin_addr, ipstr, sizeof ipstr);
             }
-            else if (csa.ss_family == AF_INET6)
+            else if (csa.ss_family == AF_INET6)  // IPv6
             {
                 struct sockaddr_in6* sin = (struct sockaddr_in6*) &csa;
                 port                     = ntohs(sin->sin6_port);
@@ -414,24 +408,27 @@ int handle_user_request(int client_socket, char* req)
     if (strlen(path) == 1)
     {
         wlog(DEBUG, "Root request.");
-        snprintf(path, sizeof path, "data/%s", landing);  // Página "padrão"
+        snprintf(path, sizeof path, "%s/%s", ROOT_DIR, landing);  // Página "padrão"
     }
 
     if (strcmp(path, "/favicon.ico") == 0)
     {
         wlog(DEBUG, "Favicon request.");
-        snprintf(path, sizeof path, "data/%s", favicon);  // Favicon
+        snprintf(path, sizeof path, "%s/%s", ROOT_DIR, FAVICON_FILE);  // Favicon
     }
 
     if (path[0] == '/')  // This is probably be the case regardless, but we should check
     {
-        memmove(path + 4, path, strlen(path) + 1);
-        memcpy(path, "data", 4);
+        char temp[sizeof path];
+        snprintf(temp, sizeof temp, "%s%s", ROOT_DIR, path);
+        strcpy(path, temp);
+        path[sizeof path - 1] = '\0';  // Só pra garantir
     }
 
     wlog(DEBUG, "Changed path to \"%s\".", path);
-
-    if (strcmp(path, "data/index.html") == 0)
+    char index_path[256];
+    snprintf(index_path, sizeof index_path, "%s/index.html", ROOT_DIR);
+    if (strcmp(path, index_path) == 0)
     {
         return serve_data_tree(client_socket);
     }
@@ -536,7 +533,8 @@ int serve_data_tree(int client_socket)
     // Use tree for now, until/if we make our own tree view
     snprintf(command,
              sizeof(command),
-             "cd data && tree -H . --noreport --charset utf-8 . > %s",
+             "cd %s && tree -H . --noreport --charset utf-8 . > %s",
+             ROOT_DIR,
              landing);
 
     if (system(command) != 0)
@@ -548,7 +546,7 @@ int serve_data_tree(int client_socket)
                         "Failed to execute tree command.");
         return EXIT_FAILURE;
     }
-    char path[16];
-    snprintf(path, 16, "data/%s", landing);
+    char path[256];
+    snprintf(path, sizeof path, "%s/%s", ROOT_DIR, landing);
     return send_file(client_socket, path);
 }

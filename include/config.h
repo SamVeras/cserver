@@ -23,6 +23,10 @@ extern int SERVER_PORT;
 extern int MAX_CLIENTS;
 /** @brief Path to the log file. */
 extern char* LOG_FILE_NAME;
+/** @brief Root directory for serving files. */
+extern char* ROOT_DIR;
+/** @brief Favicon file name. File to be served when receiving a request for /favicon.ico. */
+extern char* FAVICON_FILE;
 
 /**
  * @brief Parses an argument and assigns the value to the target integer.
