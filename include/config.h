@@ -27,8 +27,6 @@ extern char* LOG_FILE_NAME;
 extern char* ROOT_DIR;
 /** @brief Favicon file name. File to be served when receiving a request for /favicon.ico. */
 extern char* FAVICON_FILE;
-/** @brief Flag to enable proxy mode. */
-extern int PROXY_MODE;
 
 /**
  * @brief Parses an argument and assigns the value to the target integer.

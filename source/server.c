@@ -384,6 +384,7 @@ int handle_user_request(int client_socket, char* req)
 {
     // ex.: GET /index.html -> method = "GET", path = "/index.html"
     char method[8], path[256];
+    // fprintf(stderr, "Request: %s.\n", req);
     sscanf(req, "%s %s", method, path);
 
     wlog(INFO, "Request with method \"%s\" and path \"%s\"...", method, path);
@@ -416,15 +417,6 @@ int handle_user_request(int client_socket, char* req)
         snprintf(path, sizeof path, "%s/%s", ROOT_DIR, FAVICON_FILE);  // Favicon
     }
 
-    // Verify proxy mode
-    if (PROXY_MODE)
-    {
-        char remote_path[sizeof path + 20];
-        snprintf(remote_path, sizeof remote_path, "http://%s", path + 1);  // +1 para remover o /
-        wlog(DEBUG, "Proxy request. Remote path: %s.", remote_path);
-        return handle_proxy_request(client_socket, remote_path);
-    }
-
     if (path[0] == '/')  // This is probably be the case regardless, but we should check
     {
         char temp[sizeof path];
@@ -442,113 +434,6 @@ int handle_user_request(int client_socket, char* req)
     }
 
     return send_file(client_socket, path);
-}
-
-/* -------------------------------------------------------------------------- */
-
-int handle_proxy_request(int client_socket, const char* remote_path)
-{
-    char hostname[256], path[256];
-    int  port = 80;  // Default HTTP port
-
-    if (sscanf(remote_path, "http://%255[^/]/%255[^\n]", hostname, path) != 2)
-    {
-        if (sscanf(remote_path, "http://%255[^/]", hostname) == 1)
-        {
-            path[0] = '\0';
-        }
-        else
-        {
-            wlog(WARNING, "Malformed url: %s.", remote_path);
-            send_error_page(client_socket, "400 Bad Request", "400", "Malformed url.");
-            return EXIT_FAILURE;
-        }
-    }
-
-    wlog(DEBUG, "Hostname: %s, Path: %s.", hostname, path);
-
-    struct addrinfo hints, *res;
-    memset(&hints, 0, sizeof hints);
-    hints.ai_family   = AF_INET;
-    hints.ai_socktype = SOCK_STREAM;
-
-    int err = getaddrinfo(hostname, NULL, &hints, &res);
-    if (err != 0)
-    {
-        wlog(WARNING, "proxy getaddrinfo failed: %d %s.", err, gai_strerror(err));
-        send_error_page(client_socket, "500 Internal Server Error", "500", "Internal error.");
-        return EXIT_FAILURE;
-    }
-
-    struct sockaddr_in* remote_addr = (struct sockaddr_in*) res->ai_addr;
-    remote_addr->sin_port           = htons(port);
-
-    int rsfd = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
-    if (rsfd == -1)
-    {
-        wlog(WARNING, "proxy socket failed: %d %s.", errno, strerror(errno));
-        send_error_page(client_socket, "500 Internal Server Error", "500", "Internal error.");
-        freeaddrinfo(res);
-        return EXIT_FAILURE;
-    }
-
-    if (connect(rsfd, res->ai_addr, res->ai_addrlen) == -1)
-    {
-        wlog(WARNING, "proxy connect failed: %d %s.", errno, strerror(errno));
-        send_error_page(client_socket, "500 Internal Server Error", "500", "Internal error.");
-        freeaddrinfo(res);
-        close(rsfd);
-        return EXIT_FAILURE;
-    }
-
-    char request_buffer[BUFFER_SIZE];
-    int  request_length = snprintf(request_buffer,
-                                  BUFFER_SIZE,
-                                  "GET /%s HTTP/1.1\r\nHost: %s\r\nConnection: close\r\n\r\n",
-                                  path,
-                                  hostname);
-
-    if (send(rsfd, request_buffer, request_length, 0) == -1)
-    {
-        wlog(WARNING, "proxy send failed: %d %s.", errno, strerror(errno));
-        send_error_page(client_socket, "500 Internal Server Error", "500", "Internal error.");
-        freeaddrinfo(res);
-        close(rsfd);
-        return EXIT_FAILURE;
-    }
-
-    char    response_buffer[BUFFER_SIZE];
-    ssize_t bytes;
-
-    while ((bytes = recv(rsfd, response_buffer, BUFFER_SIZE, 0)) > 0)
-    {
-        if (bytes <= 0)
-        {
-            break;
-        }
-
-        if (send(client_socket, response_buffer, bytes, 0) == -1)
-        {
-            wlog(WARNING, "proxy send failed: %d %s.", errno, strerror(errno));
-            send_error_page(client_socket, "500 Internal Server Error", "500", "Internal error.");
-            freeaddrinfo(res);
-            close(rsfd);
-            return EXIT_FAILURE;
-        }
-    }
-
-    if (bytes == -1)
-    {
-        wlog(WARNING, "proxy recv failed: %d %s.", errno, strerror(errno));
-        send_error_page(client_socket, "500 Internal Server Error", "500", "Internal error.");
-        freeaddrinfo(res);
-        close(rsfd);
-        return EXIT_FAILURE;
-    }
-
-    close(rsfd);
-    freeaddrinfo(res);
-    return EXIT_SUCCESS;
 }
 
 /* -------------------------------------------------------------------------- */
