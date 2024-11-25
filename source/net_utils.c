@@ -142,16 +142,15 @@ void format_log_message(char str[], size_t str_len)
     // Truncate at first newline
     if (new_line_pos)
     {
-        *(strchr(str, '\n') + 1) = '\0';
+        *(new_line_pos) = '\0';
         return;
     }
 
-    // If no newline and there's room, append newline
-    if (str_len < (size_t) (BUFFER_SIZE - 1))
-    {
-        str[str_len]     = '\n';
-        str[str_len + 1] = '\0';
-    }
+    if (str_len < 2)
+        return;
+
+    str[str_len - 1] = '\n';
+    str[str_len]     = '\0';
 
     return;
 }

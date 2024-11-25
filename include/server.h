@@ -91,3 +91,9 @@ int server_client_handler(int client_socket);
  * @param client_socket The socket associated with the client.
  * @return EXIT_SUCCESS on successfully sending the directory listing, EXIT_FAILURE on error.*/
 int serve_data_tree(int client_socket);
+
+/**
+ * @brief Handles a proxy request from a client.
+ * TODO
+ */
+int handle_proxy_request(int client_socket, const char* remote_path);

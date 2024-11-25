@@ -13,6 +13,7 @@ int      BACKLOG       = -1;
 LogLevel LOG_LEVEL     = -1;
 int      SERVER_PORT   = -1;
 int      MAX_CLIENTS   = -1;
+int      PROXY_MODE    = -1;
 char*    LOG_FILE_NAME = "";
 char*    ROOT_DIR      = "";
 char*    FAVICON_FILE  = "";
@@ -56,6 +57,7 @@ int config_server(int argc, char const* argv[])
     int log_level_int = 2;
     BACKLOG           = 5;     // Connection queue size
     MAX_CLIENTS       = 10;
+    PROXY_MODE        = 0;
     LOG_FILE_NAME     = "server.log";
     ROOT_DIR          = "data";
     FAVICON_FILE      = "favicon.png";
@@ -113,6 +115,14 @@ int config_server(int argc, char const* argv[])
             if (parse_arg(argv[i - 1], argv[i], &MAX_CLIENTS))
             {
                 return EXIT_FAILURE;
+            }
+        }
+        else if ((strcmp("-x", argv[i]) && strcmp("--proxy", argv[i])) == 0)
+        {
+            i++;
+            if (strcmp(argv[i], "on") == 0)
+            {
+                PROXY_MODE = 1;
             }
         }
         else if ((strcmp("-i", argv[i]) && strcmp("--favicon", argv[i])) == 0)
@@ -209,7 +219,7 @@ int config_server(int argc, char const* argv[])
 
     LOG_LEVEL = (LogLevel) log_level_int;
 
-    fprintf(stderr, "Arguments successfully set: ");
+    fprintf(stderr, "Arguments set: ");
     server_config_show();
 
     return EXIT_SUCCESS;
@@ -219,13 +229,17 @@ int config_server(int argc, char const* argv[])
 
 void server_config_show()
 {
-    fprintf(stderr,
-            "%d, %d, %d, %d, %s\n",
-            SERVER_PORT,
-            BUFFER_SIZE,
-            LOG_LEVEL,
-            BACKLOG,
-            LOG_FILE_NAME);
+    fprintf(
+        stderr,
+        "PORT=%d, BUFFER=%d, LOGLEVEL=%d, BACKLOG=%d, LOGFILE=%s, PROXY=%d, FAVICON=%s, ROOT=%s\n",
+        SERVER_PORT,
+        BUFFER_SIZE,
+        LOG_LEVEL,
+        BACKLOG,
+        LOG_FILE_NAME,
+        PROXY_MODE,
+        FAVICON_FILE,
+        ROOT_DIR);
     return;
 }
 
@@ -261,6 +275,10 @@ void config_help()
             "Will be created if it does not exist. "
             "If specified, file name must not be empty. "
             "Defaults to server.log.\n"
+
+            "-x, --proxy on\t\t\t"
+            "Explicitely enable proxy mode. "
+            "Disabled by default.\n"
 
             "-r, --root ROOTDIR\t\t"
             "Set the root directory for serving files. "
