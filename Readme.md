@@ -6,6 +6,14 @@ C.
 It's my first implementation of a web server for a computer networks class,
 designed to help me understand the basics of networking and socket programming.
 
+## Table of Contents
+
+- [Setup](#setup)
+- [Tasks](#tasks)
+- [Usage](#usage)
+- [Acknowledgments](#acknowledgments)
+- [Demo Video](#low-quality-demo)
+
 ## Setup
 
 1. **Clone the repository**:
