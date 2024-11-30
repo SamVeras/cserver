@@ -115,3 +115,7 @@ Run the server with the following options:
 - [Git](https://git-scm.com/), created by [Linus
   Torvalds](https://github.com/torvalds/), made version control for this project
   a breeze.
+
+### Low Quality Demo
+
+https://github.com/user-attachments/assets/5ab0111e-6b22-46d1-b7e8-e196895f3477
