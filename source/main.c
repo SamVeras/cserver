@@ -13,7 +13,7 @@
 // TODO remove necessity of having a favicon file if none is found (maybe have a default one?)
 int main(int argc, char const* argv[])
 {
-    if (config_server(argc, argv))
+    if (config_server(argc, argv) == EXIT_FAILURE)
         return EXIT_FAILURE;
 
     if (server_start() == EXIT_FAILURE)
