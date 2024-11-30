@@ -13,22 +13,26 @@ designed to help me understand the basics of networking and socket programming.
    - HTTPS `https://github.com/SamVeras/cserver.git`
    - SSH `git@github.com:SamVeras/cserver.git`.
 
-2. **Install [Task](https://taskfile.dev/)** (if not already installed).
+2. **Initialize and update submodules**:
 
-3. **Install [Doxygen](https://www.doxygen.nl)** (optional, but required to build
+   - Run `git submodule init` and `git submodule update`.
+
+3. **Install [Task](https://taskfile.dev/)** (if not already installed).
+
+4. **Install [Doxygen](https://www.doxygen.nl)** (optional, but required to build
    docs).
 
-4. **Install tree** (optional but required if you want to generate the index directory structure):
+5. **Install tree** (optional but required if you want to generate the index directory structure):
 
    - It should be available on most, if not all, Linux distributions.
    - For example, on Debian-based systems, you can install it with: `sudo apt install tree`
    - If tree is missing, the index folder directory generation will fail.
 
-5. **Build server**: Run `task build` to compile the server executable.
+6. **Build server**: Run `task build` to compile the server executable.
 
-6. **Build documentation**: Run `task docs` to build the Doxygen documentation.
+7. **Build documentation**: Run `task docs` to build the Doxygen documentation.
 
-7. **Quick start**: `server --port 8080`.
+8. **Quick start**: `server --port 8080`.
 
 The server will only serve files from the `/data` folder, which is server's
 document root.
@@ -60,38 +64,41 @@ The following tasks are defined:
 
 Run the server with the following options:
 
-- `-p, --port PORT`  
+- `-p, --port PORT`\
   Choose a specific port to bind to.\
   The port must be in the range `[1024, 65535]`, or `0` for a random port.\
   Defaults to `0`.
 
-- `-b, --buffer BUFF_SIZE`  
+- `-b, --buffer BUFF_SIZE`\
   Set the buffer size for file transfer in bytes. Must be a positive value.\
   Defaults to `1024`.
 
-- `-l, --log-level LOGLEVEL`  
+- `-l, --log-level LOGLEVEL`\
   Set the log level for messages. Only messages with this level or higher will
   be shown.\
   Must be in the range `[0, 5]`, where `TRACE = 0`, `DEBUG = 1`, `INFO = 2`,
   `WARN = 3`, `ERROR = 4`, and `FATAL = 5`.\
   Defaults to `INFO` (`2`).
 
-- `-c, --backlog MAXCONNECT`  
+- `-c, --backlog MAXCONNECT`\
   Set the maximum number of connections in the queue.\
   Must be a positive value.\
   Defaults to `5`.
 
-- `-f, --log-file LOGFILE`  
+- `-f, --log-file LOGFILE`
   Specify the name of the file to write logs to. The file will be created if it
   doesn’t exist.\
   If specified, the file name must not be empty.\
-  Defaults to `server.log`.
+  Defaults to `"server.log"`.
 
-- `-m, --max-clients MAXCLIENTS`  
-  Set the maximum number of client connections the server can handle
-  simultaneously.\
-  Must be a positive, non-zero value. Currently unused.\
-  Defaults to `10`.
+- `-r, --root ROOTDIR`\
+  Set the root directory for serving files.\
+  Defaults to `"data"`.
+
+- `-i, --favicon FAVICONFILE`\
+  Set the name of the favicon file.\
+  Must be a valid file in the root directory.\
+  Defaults to `"favicon32.png"`.
 
 ## Acknowledgments
 
